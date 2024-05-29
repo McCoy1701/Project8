@@ -9,9 +9,9 @@ SRC_DIR=src
 OBJ_DIR=obj
 BIN_DIR=bin
 
-.PHONY: all test backplane clean 6502 debug
+.PHONY: all test backplane clean main 6502 debug
 
-all:6502
+all:main
 
 
 $(OBJ_DIR)/main.o: $(SRC_DIR)/main.c
@@ -30,6 +30,12 @@ $(OBJ_DIR)/backplane.o: $(SRC_DIR)/backplane.c
 backplane: $(OBJ_DIR)/backplane.o
 	mkdir -p $(BIN_DIR)
 	$(CC) $(OBJ_DIR)/backplane.o -o $(BIN_DIR)/$@ $(CFLAGS)
+
+main: $(SRC_DIR)/main.s
+	mkdir -p $(BIN_DIR)
+	mkdir -p $(OBJ_DIR)
+	ca65 $< -o $(OBJ_DIR)/$@.o
+	ld65 -C linker.cfg $(OBJ_DIR)/main.o -o $(BIN_DIR)/$@.o
 
 6502: $(SRC_DIR)/main.s
 	mkdir -p $(BIN_DIR)
