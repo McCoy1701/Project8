@@ -1,15 +1,8 @@
-  .include "zeropage.inc"
-  .include "via.inc"
-  .include "via_consts.inc"
+.segment "UTILS"
 
-  .export delay
-  .export init_timer
-  
-  .code
-
-delay:
+.proc delay
   pha
-  delay_loop:
+delay_loop:
   sec
   lda TICKS
   sbc TOGGLE_TIME
@@ -19,8 +12,9 @@ delay:
   sta TOGGLE_TIME
   pla
   rts
+.endproc
 
-init_timer:
+.proc init_timer
   lda #0
   sta TICKS
   sta TICKS + 1
@@ -36,4 +30,5 @@ init_timer:
   sta VIA_IER
   cli
   rts
+.endproc
 

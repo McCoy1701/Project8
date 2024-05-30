@@ -1,28 +1,22 @@
-  .include "zeropage.inc"
-  .include "via.inc"
-
-  .export spi_send_instruction 
-  .export spi_send_data
-
 MOSI   = %00000010
 LCD_CS = %00000100
 
-  .code
+.segment "LCD"
 
-spi_send_instruction:
+.proc spi_send_instruction
   pha
   phx
   phy
   lda #LCD_CS                    ;Set chip select high
-  sta PORTB
+  sta VIA_PORTB
   
   ldy #5                    ;Start loop at 5
 spi_sync_char:
   lda #( LCD_CS | MOSI )          ;Set mosi high
-  sta PORTB
+  sta VIA_PORTB
   
-  inc PORTB                 ;Toggle SCLK
-  dec PORTB
+  inc VIA_PORTB                 ;Toggle SCLK
+  dec VIA_PORTB
   
   dey
   bne spi_sync_char
@@ -30,10 +24,10 @@ spi_sync_char:
   ldy #3
 spi_rwl_rsl:
   lda #LCD_CS
-  sta PORTB
+  sta VIA_PORTB
 
-  inc PORTB
-  dec PORTB
+  inc VIA_PORTB
+  dec VIA_PORTB
   
   dey
   bne spi_rwl_rsl
@@ -45,18 +39,18 @@ spi_nibble:
   rol SPI_MOSI
   bcs spi_bit_high
   lda #LCD_CS
-  sta PORTB
+  sta VIA_PORTB
   
-  inc PORTB
-  dec PORTB
+  inc VIA_PORTB
+  dec VIA_PORTB
   
   jmp spi_dec_y
 spi_bit_high:
   lda #( LCD_CS | MOSI )
-  sta PORTB
+  sta VIA_PORTB
 
-  inc PORTB
-  dec PORTB
+  inc VIA_PORTB
+  dec VIA_PORTB
 spi_dec_y:
   dey
   bne spi_nibble
@@ -64,95 +58,97 @@ spi_dec_y:
   ldy #4
 spi_send_zeros:
   lda #LCD_CS
-  sta PORTB
-  inc PORTB
-  dec PORTB
+  sta VIA_PORTB
+  inc VIA_PORTB
+  dec VIA_PORTB
   dey
   bne spi_send_zeros
  
   dex
   bne spi_send_nibble
 
-  stz PORTB
+  stz VIA_PORTB
   ply
   plx
   pla
   rts
+.endproc
 
-spi_send_data:
+.proc spi_send_data
   pha
   phx
   phy
   lda #LCD_CS                    ;Set chip select high
-  sta PORTB
+  sta VIA_PORTB
 
   ldy #5                    ;Start loop at 5
-spi_sync_char_1:
+spi_sync_char:
   lda #( LCD_CS | MOSI )          ;Set mosi high
-  sta PORTB
+  sta VIA_PORTB
   
-  inc PORTB                 ;Toggle SCLK
-  dec PORTB
+  inc VIA_PORTB                 ;Toggle SCLK
+  dec VIA_PORTB
   
   dey
-  bne spi_sync_char_1
+  bne spi_sync_char
 
   lda #LCD_CS
-  sta PORTB
+  sta VIA_PORTB
 
-  inc PORTB
-  dec PORTB
+  inc VIA_PORTB
+  dec VIA_PORTB
 
   lda #( LCD_CS | MOSI )
-  sta PORTB
+  sta VIA_PORTB
 
-  inc PORTB
-  dec PORTB
+  inc VIA_PORTB
+  dec VIA_PORTB
 
   lda #LCD_CS
-  sta PORTB
+  sta VIA_PORTB
 
-  inc PORTB
-  dec PORTB
+  inc VIA_PORTB
+  dec VIA_PORTB
 
   ldx #2
-spi_send_nibble_1:
+spi_send_nibble:
   ldy #4
-spi_nibble_1:
+spi_nibble:
   rol SPI_MOSI
-  bcs spi_bit_high_1
+  bcs spi_bit_high
   lda #LCD_CS
-  sta PORTB
+  sta VIA_PORTB
   
-  inc PORTB
-  dec PORTB
+  inc VIA_PORTB
+  dec VIA_PORTB
   
-  jmp spi_dec_y_1
-spi_bit_high_1:
+  jmp spi_dec_y
+spi_bit_high:
   lda #( LCD_CS | MOSI )
-  sta PORTB
+  sta VIA_PORTB
 
-  inc PORTB
-  dec PORTB
-spi_dec_y_1:
+  inc VIA_PORTB
+  dec VIA_PORTB
+spi_dec_y:
   dey
-  bne spi_nibble_1
+  bne spi_nibble
 
   ldy #4
-spi_send_zeros_1:
+spi_send_zeros:
   lda #LCD_CS
-  sta PORTB
-  inc PORTB
-  dec PORTB
+  sta VIA_PORTB
+  inc VIA_PORTB
+  dec VIA_PORTB
   dey
-  bne spi_send_zeros_1
+  bne spi_send_zeros
  
   dex
-  bne spi_send_nibble_1
+  bne spi_send_nibble
 
-  stz PORTB
+  stz VIA_PORTB
   ply
   plx
   pla
   rts
+.endproc
 

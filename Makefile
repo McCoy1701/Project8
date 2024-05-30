@@ -8,6 +8,8 @@ VASMFLAGS = -Fbin -dotdir -c02
 SRC_DIR=src
 OBJ_DIR=obj
 BIN_DIR=bin
+INC_DIR=include
+
 
 .PHONY: all test backplane clean main 6502 debug
 

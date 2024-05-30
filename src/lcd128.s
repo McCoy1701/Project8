@@ -1,19 +1,14 @@
-  .include "zeropage.inc"
-  .include "utils.inc"
 
-  .import spi_send_instruction
-  .import spi_send_data
-  .export print_char
-  .export lcd_text_mode
+.segment "LCD"
 
-  .code
-print_char:
+.proc print_char
   sta SPI_MOSI
   jsr spi_send_data
   jsr delay
   rts
+.endproc
 
-lcd_text_mode:
+.proc lcd_text_mode
   pha
   lda #%00100000                ;Set 8-bit mode, 1-line display, and 5x8 character font
   sta SPI_MOSI
@@ -36,3 +31,4 @@ lcd_text_mode:
   jsr delay
   pla
   rts
+.endproc
