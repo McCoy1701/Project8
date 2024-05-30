@@ -1,5 +1,6 @@
-TICKS       = $fc ;4bytes
-TOGGLE_TIME = $fb ;1byte
-SPI_MISO    = $fa ;1byte
-SPI_MOSI    = $f9 ;1byte
+.zeropage
+TICKS:       .res 4 
+TOGGLE_TIME: .res 1 
+SPI_MISO:    .res 1 
+SPI_MOSI:    .res 1 
 
