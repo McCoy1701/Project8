@@ -1,20 +1,19 @@
 .segment "UTILS"
 
-.proc delay
+delay:
   pha
-delay_loop:
+@delay_loop:
   sec
   lda TICKS
   sbc TOGGLE_TIME
   cmp #2
-  bcc delay_loop
+  bcc @delay_loop
   lda TICKS
   sta TOGGLE_TIME
   pla
   rts
-.endproc
 
-.proc init_timer
+init_timer:
   lda #0
   sta TICKS
   sta TICKS + 1
@@ -30,5 +29,4 @@ delay_loop:
   sta VIA_IER
   cli
   rts
-.endproc
 

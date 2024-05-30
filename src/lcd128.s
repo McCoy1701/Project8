@@ -1,14 +1,13 @@
 
 .segment "LCD"
 
-.proc print_char
+print_char:
   sta SPI_MOSI
   jsr spi_send_data
   jsr delay
   rts
-.endproc
 
-.proc lcd_text_mode
+lcd_text_mode:
   pha
   lda #%00100000                ;Set 8-bit mode, 1-line display, and 5x8 character font
   sta SPI_MOSI
@@ -31,4 +30,4 @@
   jsr delay
   pla
   rts
-.endproc
+

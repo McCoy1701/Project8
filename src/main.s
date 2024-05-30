@@ -14,7 +14,7 @@
 
 .code
 
-.proc reset
+reset:
   ldx #$ff                ;initialize the stack pointer to 1ff
   txs
 
@@ -28,10 +28,7 @@
   sta VIA_DDRB
 
   jsr lcd_text_mode
-  jmp main 
-.endproc
 
-.proc main
   ldx #0
 print_string:
   lda hello_world, x
@@ -42,20 +39,18 @@ print_string:
 
 loop:
   jmp loop
-.endproc
 
 hello_world: .asciiz "Hello, World!"
 
-.proc irq_handler
+irq_handler:
   bit VIA_T1CL
   inc TICKS
-  bne end_irq
+  bne @end_irq
   inc TICKS + 1
-  bne end_irq
+  bne @end_irq
   inc TICKS + 2
-  bne end_irq
+  bne @end_irq
   inc TICKS + 3
-end_irq:
+@end_irq:
   rti
-.endproc
 
