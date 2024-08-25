@@ -42,7 +42,7 @@ print_char:
   jsr delay
   rts
 
-lcd_text_mode:
+lcd_initialize:
   pha
   lda #FUNCTION_SET_4BIT_BASIC    ;Set 8-bit mode, 1-line display, and 5x8 character font
   sta SPI_MOSI
@@ -66,3 +66,37 @@ lcd_text_mode:
   pla
   rts
 
+lcd_text_mode:
+  pha
+  lda #FUNCTION_SET_4BIT_BASIC    ;Set 4-bit mode
+  sta SPI_MOSI
+  jsr spi_send_instruction
+  jsr delay
+
+  lda #DISPLAY_CLEAR
+  sta SPI_MOSI
+  jsr spi_send_instruction
+  jsr delay
+  
+  lda #RETURN_HOME
+  sta SPI_MOSI
+  jsr spi_send_instruction
+  jsr delay
+  
+  pla
+  rts
+
+lcd_grahpics_mode:
+  pha
+  lda #FUNCTION_SET_4BIT_EXTENDED
+  sta SPI_MOSI
+  jsr spi_send_instruction
+  jsr delay
+
+  lda #FUNCTION_SET_4BIT_EXTENDED_GRAPHICS
+  sta SPI_MOSI
+  jsr spi_send_instruction
+  jsr delay
+  
+  pla
+  rts
