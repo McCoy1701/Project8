@@ -1,4 +1,5 @@
 .setcpu"65c02"
+.debuginfo
 
 .segment"RESET_VECTORS"
   .word $0000
@@ -9,9 +10,11 @@
 .include "via.s"
 .include "acia.s"
 
+.include "bios.s"
 .include "utils.s"
-.include "spi_lcd128.s"
-.include "lcd128.s"
+.include "lcd/spi_lcd128.s"
+.include "lcd/lcd128.s"
+.include "wozmon.s"
 
 .code
 
@@ -29,34 +32,35 @@ reset:
   sta VIA_DDRB
 
   jsr lcd_initialize
+  jsr ACIA_INITIALIZE
 
-  lda #00                 ;Soft reset for the ACIA
-  sta ACIA_STATUS
-
-  lda #$1f                ;1stopbit, 8bit word len, baud rate 19,200
-  sta ACIA_CONTROL
-
-  lda #$0b                ;Odd parity, parity disabled, receiver normal mode, RTSB = low, disabled, irq disabled, data terminal ready
-  sta ACIA_COMMAND
-  
   ldx #0
 print_string:
-  lda hello_world, x
-  beq acia_wait
+  lda poop, x
+  beq here
   jsr print_char
   inx
   jmp print_string
 
-acia_wait:
-  lda ACIA_STATUS
-  and #$08
-  beq acia_wait
+here:
+  ldx #0
+tx_string:
+  lda hello_world, x
+  beq LOOP
+  jsr CHAR_OUT
+  inx
+  jmp tx_string
 
-  lda ACIA_DATA
-  jsr print_char
-  jmp acia_wait
+LOOP:
+ jsr CHAR_IN
+ bcc LOOP
+ jsr print_char
+ jmp LOOP
+ ;jmp WOZMON
 
 hello_world: .asciiz "Hello, World!"
+
+poop: .asciiz "Poop is yummy!"
 
 irq_handler:
   bit VIA_T1CL

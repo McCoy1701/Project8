@@ -37,7 +37,7 @@ main: $(SRC_DIR)/main.s
 	mkdir -p $(BIN_DIR)
 	mkdir -p $(OBJ_DIR)
 	ca65 $< -o $(OBJ_DIR)/$@.o
-	ld65 -C linker.cfg $(OBJ_DIR)/main.o -o $(BIN_DIR)/$@.o
+	ld65 -C linker.cfg $(OBJ_DIR)/main.o -o $(BIN_DIR)/$@.o -Ln bios.sym
 
 6502: $(SRC_DIR)/main.s
 	mkdir -p $(BIN_DIR)

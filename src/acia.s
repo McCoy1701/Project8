@@ -41,3 +41,19 @@ ACIA_DATA    = $5000
 ACIA_STATUS  = $5001
 ACIA_COMMAND = $5002
 ACIA_CONTROL = $5003
+
+
+.segment "BIOS"
+
+
+ACIA_INITIALIZE:
+  pha
+  lda #$00
+  sta ACIA_STATUS
+  lda #$1f
+  sta ACIA_CONTROL
+  lda #$0b
+  sta ACIA_COMMAND
+  pla
+  rts
+

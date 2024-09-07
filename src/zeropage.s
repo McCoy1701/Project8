@@ -1,6 +1,14 @@
-.zeropage
-TICKS:       .res 4 
-TOGGLE_TIME: .res 1 
-SPI_MISO:    .res 1 
-SPI_MOSI:    .res 1 
+XAML = $24
+XAMH = $25
+STL  = $26
+STH  = $27
+L    = $28
+H    = $29
+YSAV = $2A
+MODE = $2B
+
+TICKS       = $ff
+TOGGLE_TIME = $fb
+SPI_MISO    = $fa
+SPI_MOSI    = $f9
 
