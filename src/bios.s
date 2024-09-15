@@ -14,8 +14,8 @@ CHAR_IN:
   rts
 
 CHAR_OUT:
-  sta ACIA_DATA
   pha
+  sta ACIA_DATA
   lda #$ff
 @tx_wait:  
   dec

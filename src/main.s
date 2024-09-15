@@ -32,35 +32,20 @@ reset:
   sta VIA_DDRB
 
   jsr lcd_initialize
-  jsr ACIA_INITIALIZE
+; jsr ACIA_INITIALIZE
 
   ldx #0
 print_string:
-  lda poop, x
-  beq here
+  lda hello_world, x
+  beq LOOP
   jsr print_char
   inx
   jmp print_string
 
-here:
-  ldx #0
-tx_string:
-  lda hello_world, x
-  beq LOOP
-  jsr CHAR_OUT
-  inx
-  jmp tx_string
-
 LOOP:
- jsr CHAR_IN
- bcc LOOP
- jsr print_char
- jmp LOOP
- ;jmp WOZMON
+  jmp WOZMON
 
 hello_world: .asciiz "Hello, World!"
-
-poop: .asciiz "Poop is yummy!"
 
 irq_handler:
   bit VIA_T1CL
