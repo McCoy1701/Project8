@@ -1,16 +1,15 @@
 
+INDEX        = $B5
+HEX_L        = $B6
+HEX_H        = $B7
+READ_COUNT_L = $B8
+READ_COUNT_H = $B9
+CURRENT_L    = $BA
+CURRENT_H    = $BB
+STORE_L      = $BC
+STORE_H      = $BD
+EXAMINE_L    = $BE
 EXAMINE_H    = $BF
-EXAMINE_L    = $BD
-STORE_H      = $BC
-STORE_L      = $BB
-CURRENT_H    = $BA
-CURRENT_L    = $B9
-READ_COUNT_H = $B8
-READ_COUNT_L = $B7
-HEX_H        = $B6
-HEX_L        = $B5
-INDEX        = $B4
-MODE         = $B3
 
 INPUT_BUFFER = $0200
 
@@ -34,55 +33,81 @@ ROM_MONITOR:
   cmp #$08  ;Backspace?
   beq @backspace
   cmp #$1B  ;Escape?
-  beq ROM_MONITOR
+  beq @escape
   cmp #$0D  ;CR?
   beq @enter
   iny
   bpl @input_char
   jmp ROM_MONITOR  ;Overflowed the input buffer
 
+@escape:
+  lda #$0D  ;'CR'
+  jsr CHAR_OUT
+  jmp ROM_MONITOR
+
 @backspace:
   cpy #$00
   beq @input_char
   dey
-  lda #$08  ;backspace
-  jsr CHAR_OUT
   jmp @input_char
 
 @enter:
-  sty INDEX  ;Store the index into the input buffer
-
   ldy #$00   ;Zero registers
   lda #$00
   tax
 
+@parse_character_loop:
   lda INPUT_BUFFER, y
   cmp #$0D  ;'CR'
-  beq @soft_reset
+  beq @soft_reset  ;Finished with this line
   cmp #$77  ;'w'
-  beq @write
+  beq @JMP_WRITE
   cmp #$72  ;'r'
-  beq @read
+  beq @JMP_READ
   cmp #$61  ;'a'
-  beq @set_address
+  beq @JMP_SET_ADDRESS
   cmp #$6f  ;'o'
-  beq @print_addresses
+  beq @JMP_PRINT_ADDRESSES
   cmp #$62  ;'b'
-  beq @block_examine
+  beq @JMP_BLOCK_EXAMINE
   cmp #$52  ;'R'
-  beq @print_registers
+  beq @JMP_PRINT_REGISTERS
   cmp #$78  ;'x'
-  beq @execute
-  jmp ROM_MONITOR  ;Something Bad Happened
+  beq @JMP_EXECUTE
+  jmp ROM_MONITOR  ;Something bad happened
+
+@JMP_WRITE:
+  jmp @write
+
+@JMP_READ:
+  jmp @read
+
+@JMP_SET_ADDRESS:
+  jmp @set_address
+
+@JMP_PRINT_ADDRESSES:
+  jmp @print_addresses
+
+@JMP_BLOCK_EXAMINE:
+  jmp @block_examine
+
+@JMP_PRINT_REGISTERS:
+  jmp @print_registers
+
+@JMP_EXECUTE:
+  jmp @execute
 
 @write:
-  jmp @soft_reset
+  iny
+  jmp @parse_character_loop
 
 @read:
   iny  ;current index is at 'r'
   jsr @skip_spaces
   jsr @parse_hex  ;get the hex value after r command
   lda #$00  ;Set zero flag first time through
+  sta READ_COUNT_L
+  sta READ_COUNT_H
 
 @print_new_line:
   bne @print_data
@@ -122,7 +147,7 @@ ROM_MONITOR:
   jmp @print_new_line
 
 @done_reading:
-  jmp @soft_reset
+  jmp @parse_character_loop
 
 
 ;Set the current, store, examine address
@@ -159,18 +184,21 @@ ROM_MONITOR:
   lda #$20  ;'Space'
   jsr CHAR_OUT
 
-  lda (EXAMINE_L, x)
+  lda (EXAMINE_L)
   jsr @print_byte
 
-  jmp @soft_reset
+  jmp @parse_character_loop
+
+;Print the addresses out EXAMINE, STORE, CURRENT
 
 @print_addresses:
+  iny
   lda #$0D
   jsr CHAR_OUT
 
   ldx #$00
 @print_examine_str:
-  lda @examine_str
+  lda @examine_str,x
   beq @done_examine_print
   jsr CHAR_OUT
   inx
@@ -189,7 +217,7 @@ ROM_MONITOR:
 
   ldx #$00
 @print_current_str:
-  lda @current_str
+  lda @current_str,x
   beq @done_current_print
   jsr CHAR_OUT
   inx
@@ -208,7 +236,7 @@ ROM_MONITOR:
   
   ldx #$00
 @print_store_str:
-  lda @current_str
+  lda @store_str,x
   beq @done_store_print
   jsr CHAR_OUT
   inx
@@ -221,15 +249,124 @@ ROM_MONITOR:
   jsr @print_byte
   lda STORE_L
   jsr @print_byte
-  
-  jmp @soft_reset
+
+  jmp @parse_character_loop
 
 @block_examine:
-  jmp @soft_reset
+  iny
+  jsr @skip_spaces
+  jsr @parse_hex
+  lda HEX_L
+  sta CURRENT_L
+  lda HEX_H
+  sta CURRENT_H
+  
+  jsr @skip_spaces
+  jsr @parse_hex
+  lda HEX_L
+  sta EXAMINE_L
+  lda HEX_H
+  sta EXAMINE_H
+  
+  lda #$00  ;Set zero flag first time through
+
+@print_new_block_line:
+  bne @print_block_data
+  lda #$0D  ;'CR'
+  jsr CHAR_OUT
+  lda EXAMINE_H
+  jsr @print_byte
+  lda EXAMINE_L
+  jsr @print_byte
+  lda #$3A  ;':'
+  jsr CHAR_OUT
+
+@print_block_data:
+  lda #$20  ;'Space'
+  jsr CHAR_OUT
+  lda (EXAMINE_L, x)
+  jsr @print_byte
+
+  lda CURRENT_H
+  cmp EXAMINE_H
+  bne @continue_reading_block
+
+  lda CURRENT_L
+  cmp EXAMINE_L
+  beq @done_reading_block
+
+@continue_reading_block:
+  inc CURRENT_L
+  bne @mod_8_check_block
+  inc CURRENT_H
+
+@mod_8_check_block:
+  lda CURRENT_L
+  and #$07
+  jmp @print_new_block_line
+
+@done_reading_block:
+  jmp @parse_character_loop
+
+;Print out all the registers
+;A, X, Y, Stack, Flags
 
 @print_registers:
-  jmp @soft_reset
+  iny
+  pha
+  lda #$0D
+  jsr CHAR_OUT
+  lda #$41  ;'A'
+  jsr CHAR_OUT
+  lda #$3A  ;':'
+  jsr CHAR_OUT
+  pla
+  jsr @print_byte
+  
+  lda #$20  ;'Space'
+  jsr CHAR_OUT
+  lda #$58  ;'X'
+  jsr CHAR_OUT
+  lda #$3A  ;':'
+  jsr CHAR_OUT
+  txa
+  jsr @print_byte
+  
+  lda #$20  ;'Space'
+  jsr CHAR_OUT
+  lda #$59  ;'Y'
+  jsr CHAR_OUT
+  lda #$3A  ;':'
+  jsr CHAR_OUT
+  tya
+  jsr @print_byte
+  
+  lda #$20  ;'Space'
+  jsr CHAR_OUT
+  lda #$53  ;'S'
+  jsr CHAR_OUT
+  lda #$3A  ;':'
+  jsr CHAR_OUT
+  tsx
+  txa
+  jsr @print_byte
+  
+  lda #$20  ;'Space'
+  jsr CHAR_OUT
+  lda #$46  ;'F'
+  jsr CHAR_OUT
+  lda #$3A  ;':'
+  jsr CHAR_OUT
+  php
+  pla
+  jsr @print_byte
 
+  jmp @parse_character_loop
+
+;Start executing code at this location
+
+@execute:
+  jmp (EXAMINE_L)
 
 ;Parses hex value from input buffer until non hex (0-9,A-F) is found
 ;Returns the hex values found from input buffer in HEX_L, HEX_H
@@ -268,8 +405,11 @@ ROM_MONITOR:
 
 @not_hex:
   cpy INDEX  ;Y = INDEX means found no hex values
-  beq ROM_MONITOR  ;Hard reset before shit breaks
+  beq @hard_reset  ;Hard reset before shit breaks
   rts
+
+@hard_reset:
+  jmp ROM_MONITOR
 
 ;Skips spaces encountered in the input buffer
 ;Registers affected: A, Y, INPUT_BUFFER
@@ -299,12 +439,15 @@ ROM_MONITOR:
   and #$0F
   ora #$30
   cmp #$3A
-  bcc CHAR_OUT  ;Print digits
+  bcc @jmp_char_out  ;Print digits
   adc #$06
   jsr CHAR_OUT  ;Print Hex values
   rts
 
+@jmp_char_out:
+  jmp CHAR_OUT
+
 @examine_str: .asciiz "Examine:"
-@store_str:   .asciiz "Store:"
+@store_str:   .asciiz "Store  :"
 @current_str: .asciiz "Current:"
 

@@ -32,8 +32,17 @@ reset:
   sta VIA_DDRB
 
   jsr lcd_initialize
-; jsr ACIA_INITIALIZE
+  jsr ACIA_INITIALIZE
 
+  ldx #0
+out_string:
+  lda hello_world, x
+  beq here
+  jsr CHAR_OUT
+  inx
+  jmp out_string
+
+here:
   ldx #0
 print_string:
   lda hello_world, x
@@ -59,3 +68,4 @@ irq_handler:
 @end_irq:
   rti
 
+.include "rom_monitor.s"
