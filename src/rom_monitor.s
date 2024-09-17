@@ -99,6 +99,21 @@ ROM_MONITOR:
 
 @write:
   iny
+
+@write_loop:
+  jsr @skip_spaces
+  jsr @parse_hex
+  lda HEX_L
+  sta (STORE_L)
+  inc STORE_L
+  bne @check_CR
+  inc STORE_H
+
+@check_CR:
+  lda INPUT_BUFFER, y
+  cmp #$0D  ;'CR'
+  bne @write_loop
+
   jmp @parse_character_loop
 
 @read:
@@ -274,9 +289,9 @@ ROM_MONITOR:
   bne @print_block_data
   lda #$0D  ;'CR'
   jsr CHAR_OUT
-  lda EXAMINE_H
+  lda CURRENT_H
   jsr @print_byte
-  lda EXAMINE_L
+  lda CURRENT_L
   jsr @print_byte
   lda #$3A  ;':'
   jsr CHAR_OUT
@@ -284,7 +299,7 @@ ROM_MONITOR:
 @print_block_data:
   lda #$20  ;'Space'
   jsr CHAR_OUT
-  lda (EXAMINE_L, x)
+  lda (CURRENT_L)
   jsr @print_byte
 
   lda CURRENT_H
