@@ -1,11 +1,9 @@
 
-INDEX        = $B5
-HEX_L        = $B6
-HEX_H        = $B7
-READ_COUNT_L = $B8
-READ_COUNT_H = $B9
-CURRENT_L    = $BA
-CURRENT_H    = $BB
+BUFFER_INDEX = $B7
+HEX_L        = $B8
+HEX_H        = $B9
+INDEX_L      = $BA
+INDEX_H      = $BB
 STORE_L      = $BC
 STORE_H      = $BD
 EXAMINE_L    = $BE
@@ -22,6 +20,10 @@ ROM_MONITOR:
   jsr CHAR_OUT
 
 @soft_reset:
+  php  ;Come back from user code so print register will work
+  phy
+  phx
+  pha
   lda #$0D  ;'CR'
   jsr CHAR_OUT
 
@@ -41,9 +43,7 @@ ROM_MONITOR:
   jmp ROM_MONITOR  ;Overflowed the input buffer
 
 @escape:
-  lda #$0D  ;'CR'
-  jsr CHAR_OUT
-  jmp ROM_MONITOR
+  jmp @soft_reset
 
 @backspace:
   cpy #$00
@@ -105,60 +105,50 @@ ROM_MONITOR:
   jsr @parse_hex
   lda HEX_L
   sta (STORE_L)
-  inc STORE_L
-  bne @check_CR
-  inc STORE_H
 
-@check_CR:
   lda INPUT_BUFFER, y
   cmp #$0D  ;'CR'
-  bne @write_loop
+  beq @write_done
 
+  inc STORE_L
+  bne @jmp_write_loop
+  inc STORE_H
+
+@jmp_write_loop:
+  jmp @write_loop
+
+@write_done:
   jmp @parse_character_loop
+
+;Read n bytes from the address in examine
 
 @read:
   iny  ;current index is at 'r'
   jsr @skip_spaces
   jsr @parse_hex  ;get the hex value after r command
   lda #$00  ;Set zero flag first time through
-  sta READ_COUNT_L
-  sta READ_COUNT_H
+  sta INDEX_L
+  sta INDEX_H
 
 @print_new_line:
-  bne @print_data
-  lda #$0D  ;'CR'
-  jsr CHAR_OUT
-  lda EXAMINE_H
-  jsr @print_byte
-  lda EXAMINE_L
-  jsr @print_byte
-  lda #$3A  ;':'
-  jsr CHAR_OUT
+  jsr @print_examine
 
-@print_data:
-  lda #$20  ;'Space'
-  jsr CHAR_OUT
-  lda (EXAMINE_L, x)
-  jsr @print_byte
-
-  lda READ_COUNT_H
+  lda INDEX_H
   cmp HEX_H
   bne @continue_reading
 
-  lda READ_COUNT_L
+  lda INDEX_L
   cmp HEX_L
   beq @done_reading
 
 @continue_reading:
-  inc READ_COUNT_L
+  inc INDEX_L
   inc EXAMINE_L
-  bne @mod_8_check
-  inc READ_COUNT_H
+  bne @no_read_count_wrap
+  inc INDEX_H
   inc EXAMINE_H
 
-@mod_8_check:
-  lda EXAMINE_L
-  and #$07
+@no_read_count_wrap:
   jmp @print_new_line
 
 @done_reading:
@@ -175,12 +165,12 @@ ROM_MONITOR:
   jsr @parse_hex
 
   lda HEX_L
-  sta CURRENT_L
+  sta INDEX_L
   sta STORE_L
   sta EXAMINE_L
 
   lda HEX_H
-  sta CURRENT_H
+  sta INDEX_H
   sta STORE_H
   sta EXAMINE_H
 
@@ -231,19 +221,19 @@ ROM_MONITOR:
   jsr CHAR_OUT
 
   ldx #$00
-@print_current_str:
-  lda @current_str,x
-  beq @done_current_print
+@print_index_str:
+  lda @index_str,x
+  beq @done_index_print
   jsr CHAR_OUT
   inx
-  jmp @print_current_str
+  jmp @print_index_str
 
-@done_current_print:
+@done_index_print:
   lda #$20
   jsr CHAR_OUT
-  lda CURRENT_H
+  lda INDEX_H
   jsr @print_byte
-  lda CURRENT_L
+  lda INDEX_L
   jsr @print_byte
 
   lda #$0D
@@ -267,15 +257,10 @@ ROM_MONITOR:
 
   jmp @parse_character_loop
 
+;Examine a block of address from hex value to hex value
+
 @block_examine:
   iny
-  jsr @skip_spaces
-  jsr @parse_hex
-  lda HEX_L
-  sta CURRENT_L
-  lda HEX_H
-  sta CURRENT_H
-  
   jsr @skip_spaces
   jsr @parse_hex
   lda HEX_L
@@ -283,41 +268,32 @@ ROM_MONITOR:
   lda HEX_H
   sta EXAMINE_H
   
+  jsr @skip_spaces
+  jsr @parse_hex
+  lda HEX_L
+  sta INDEX_L
+  lda HEX_H
+  sta INDEX_H
+  
   lda #$00  ;Set zero flag first time through
 
 @print_new_block_line:
-  bne @print_block_data
-  lda #$0D  ;'CR'
-  jsr CHAR_OUT
-  lda CURRENT_H
-  jsr @print_byte
-  lda CURRENT_L
-  jsr @print_byte
-  lda #$3A  ;':'
-  jsr CHAR_OUT
+  jsr @print_examine
 
-@print_block_data:
-  lda #$20  ;'Space'
-  jsr CHAR_OUT
-  lda (CURRENT_L)
-  jsr @print_byte
-
-  lda CURRENT_H
-  cmp EXAMINE_H
+  lda EXAMINE_H
+  cmp INDEX_H
   bne @continue_reading_block
 
-  lda CURRENT_L
-  cmp EXAMINE_L
+  lda EXAMINE_L
+  cmp INDEX_L
   beq @done_reading_block
 
 @continue_reading_block:
-  inc CURRENT_L
-  bne @mod_8_check_block
-  inc CURRENT_H
+  inc EXAMINE_L
+  bne @no_examine_wrap
+  inc EXAMINE_H
 
-@mod_8_check_block:
-  lda CURRENT_L
-  and #$07
+@no_examine_wrap:
   jmp @print_new_block_line
 
 @done_reading_block:
@@ -328,14 +304,13 @@ ROM_MONITOR:
 
 @print_registers:
   iny
-  pha
   lda #$0D
   jsr CHAR_OUT
   lda #$41  ;'A'
   jsr CHAR_OUT
   lda #$3A  ;':'
   jsr CHAR_OUT
-  pla
+  pla  ;A should be last on stack from soft reset
   jsr @print_byte
   
   lda #$20  ;'Space'
@@ -344,7 +319,7 @@ ROM_MONITOR:
   jsr CHAR_OUT
   lda #$3A  ;':'
   jsr CHAR_OUT
-  txa
+  pla  ;X should be next
   jsr @print_byte
   
   lda #$20  ;'Space'
@@ -353,7 +328,7 @@ ROM_MONITOR:
   jsr CHAR_OUT
   lda #$3A  ;':'
   jsr CHAR_OUT
-  tya
+  pla  ;Y should be next
   jsr @print_byte
   
   lda #$20  ;'Space'
@@ -372,8 +347,7 @@ ROM_MONITOR:
   jsr CHAR_OUT
   lda #$3A  ;':'
   jsr CHAR_OUT
-  php
-  pla
+  pla  ;Flags are last
   jsr @print_byte
 
   jmp @parse_character_loop
@@ -383,6 +357,28 @@ ROM_MONITOR:
 @execute:
   jmp (EXAMINE_L)
 
+;Print out the location of examine, and its contents.
+
+@print_examine:
+  lda EXAMINE_L
+  and #$07
+  bne @print_examine_data
+  lda #$0D  ;'CR'
+  jsr CHAR_OUT
+  lda EXAMINE_H
+  jsr @print_byte
+  lda EXAMINE_L
+  jsr @print_byte
+  lda #$3A  ;':'
+  jsr CHAR_OUT
+
+@print_examine_data:
+  lda #$20  ;'Space'
+  jsr CHAR_OUT
+  lda (EXAMINE_L)
+  jsr @print_byte
+  rts
+
 ;Parses hex value from input buffer until non hex (0-9,A-F) is found
 ;Returns the hex values found from input buffer in HEX_L, HEX_H
 ;Registers affected: A, Y, X, INPUT_BUFFER, HEX_L, HEX_H
@@ -391,7 +387,7 @@ ROM_MONITOR:
   lda #$00
   sta HEX_L
   sta HEX_H
-  sty INDEX
+  sty BUFFER_INDEX
 
 @get_hex:
   lda INPUT_BUFFER, y
@@ -419,7 +415,7 @@ ROM_MONITOR:
   jmp @get_hex
 
 @not_hex:
-  cpy INDEX  ;Y = INDEX means found no hex values
+  cpy BUFFER_INDEX  ;Y = INDEX means found no hex values
   beq @hard_reset  ;Hard reset before shit breaks
   rts
 
@@ -463,6 +459,6 @@ ROM_MONITOR:
   jmp CHAR_OUT
 
 @examine_str: .asciiz "Examine:"
-@store_str:   .asciiz "Store  :"
-@current_str: .asciiz "Current:"
+@store_str:   .asciiz "Store:"
+@index_str:   .asciiz "Index:"
 

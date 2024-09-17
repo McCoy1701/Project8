@@ -14,7 +14,7 @@
 .include "utils.s"
 .include "lcd/spi_lcd128.s"
 .include "lcd/lcd128.s"
-.include "wozmon.s"
+;.include "wozmon.s"
 
 .code
 
@@ -34,27 +34,7 @@ reset:
   jsr lcd_initialize
   jsr ACIA_INITIALIZE
 
-  ldx #0
-out_string:
-  lda hello_world, x
-  beq here
-  jsr CHAR_OUT
-  inx
-  jmp out_string
-
-here:
-  ldx #0
-print_string:
-  lda hello_world, x
-  beq LOOP
-  jsr print_char
-  inx
-  jmp print_string
-
-LOOP:
-  jmp WOZMON
-
-hello_world: .asciiz "Hello, World!"
+  jmp ROM_MONITOR
 
 irq_handler:
   bit VIA_T1CL
