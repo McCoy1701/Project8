@@ -15,4 +15,6 @@ TICKS       = $ff
 TOGGLE_TIME = $fb
 SPI_MISO    = $fa
 SPI_MOSI    = $f9
+READ_PTR    = $f8
+WRITE_PTR   = $f7
 

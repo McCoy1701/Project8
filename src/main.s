@@ -83,7 +83,6 @@ irq_handler:
   asl
   asl
   asl
-  asl
   bmi @return_to_monitor
 
 @end_irq:
@@ -93,6 +92,9 @@ irq_handler:
   rti
 
 @return_to_monitor:
-  jmp ROM_MONITOR
+  ply
+  plx
+  pla
+  jmp ROM_SOFT_RESET
 
 .include "rom_monitor.s"

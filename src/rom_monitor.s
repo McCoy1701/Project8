@@ -9,7 +9,7 @@ ROM_MONITOR:
   lda #$6B  ;'k'
   jsr CHAR_OUT
 
-@soft_reset:
+ROM_SOFT_RESET:
   php  ;Come back from user code so print register will work
   phy
   phx
@@ -33,7 +33,7 @@ ROM_MONITOR:
   jmp ROM_MONITOR  ;Overflowed the input buffer
 
 @escape:
-  jmp @soft_reset
+  jmp ROM_SOFT_RESET
 
 @backspace:
   cpy #$00
@@ -49,7 +49,7 @@ ROM_MONITOR:
 @parse_character_loop:
   lda INPUT_BUFFER, y
   cmp #$0D  ;'CR'
-  beq @soft_reset  ;Finished with this line
+  beq ROM_SOFT_RESET  ;Finished with this line
   cmp #$77  ;'w'
   beq @JMP_WRITE
   cmp #$72  ;'r'
