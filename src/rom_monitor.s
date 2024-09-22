@@ -1,5 +1,5 @@
 
-INPUT_BUFFER = $0200
+BUFFER = $0200
 
 .code
 
@@ -21,7 +21,7 @@ ROM_SOFT_RESET:
 @input_char:
   jsr CHAR_IN ;Get character
   bcc @input_char ;Carry will be set if there is a character
-  sta INPUT_BUFFER, y ;store char in buffer
+  sta BUFFER, y ;store char in buffer
   cmp #$08  ;Backspace?
   beq @backspace
   cmp #$1B  ;Escape?
@@ -47,7 +47,7 @@ ROM_SOFT_RESET:
   tax
 
 @parse_character_loop:
-  lda INPUT_BUFFER, y
+  lda BUFFER, y
   cmp #$0D  ;'CR'
   beq ROM_SOFT_RESET  ;Finished with this line
   cmp #$77  ;'w'
@@ -96,7 +96,7 @@ ROM_SOFT_RESET:
   lda HEX_L
   sta (STORE_L)
 
-  lda INPUT_BUFFER, y
+  lda BUFFER, y
   cmp #$0D  ;'CR'
   beq @write_done
 
@@ -380,7 +380,7 @@ ROM_SOFT_RESET:
   sty BUFFER_INDEX
 
 @get_hex:
-  lda INPUT_BUFFER, y
+  lda BUFFER, y
   eor #$30  ;Map ascii digits to 0->9hexit
   cmp #$0A  ;Digit
   bcc @digit
@@ -416,7 +416,7 @@ ROM_SOFT_RESET:
 ;Registers affected: A, Y, INPUT_BUFFER
 
 @skip_spaces:
-  lda INPUT_BUFFER, y
+  lda BUFFER, y
   cmp #$20  ;space
   beq @do_skip  ;Skip over space
   rts

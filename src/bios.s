@@ -1,4 +1,7 @@
 
+.segment "INPUT_BUFFER"
+INPUT_BUFFER: .res $100
+
 .segment "BIOS"
 
 CHAR_IN:

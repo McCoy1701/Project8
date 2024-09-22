@@ -99,6 +99,7 @@ al 008029 .@tx_wait
 al 008023 .CHAR_OUT
 al 008021 .@no_keypress
 al 008012 .CHAR_IN
+al 000300 .INPUT_BUFFER
 al 008000 .ACIA_INITIALIZE
 al 008062 .irq_handler
 al 008045 .reset

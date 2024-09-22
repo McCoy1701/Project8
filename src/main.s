@@ -14,7 +14,6 @@
 .include "utils.s"
 .include "lcd/spi_lcd128.s"
 .include "lcd/lcd128.s"
-;.include "wozmon.s"
 
 .code
 
