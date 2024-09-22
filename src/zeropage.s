@@ -1,12 +1,16 @@
-XAML = $24
-XAMH = $25
-STL  = $26
-STH  = $27
-L    = $28
-H    = $29
-YSAV = $2A
-MODE = $2B
 
+;Rom Monitor Pointers
+BUFFER_INDEX = $B7
+HEX_L        = $B8
+HEX_H        = $B9
+INDEX_L      = $BA
+INDEX_H      = $BB
+STORE_L      = $BC
+STORE_H      = $BD
+EXAMINE_L    = $BE
+EXAMINE_H    = $BF
+
+;System Pointers
 TICKS       = $ff
 TOGGLE_TIME = $fb
 SPI_MISO    = $fa

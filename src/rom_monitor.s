@@ -1,14 +1,4 @@
 
-BUFFER_INDEX = $B7
-HEX_L        = $B8
-HEX_H        = $B9
-INDEX_L      = $BA
-INDEX_H      = $BB
-STORE_L      = $BC
-STORE_H      = $BD
-EXAMINE_L    = $BE
-EXAMINE_H    = $BF
-
 INPUT_BUFFER = $0200
 
 .code
@@ -178,10 +168,10 @@ ROM_MONITOR:
   jsr CHAR_OUT
 
   lda HEX_H
-  jsr @print_byte
+  jsr PRINT_BYTE
 
   lda HEX_L
-  jsr @print_byte
+  jsr PRINT_BYTE
 
   lda #$3A  ;':'
   jsr CHAR_OUT
@@ -190,7 +180,7 @@ ROM_MONITOR:
   jsr CHAR_OUT
 
   lda (EXAMINE_L)
-  jsr @print_byte
+  jsr PRINT_BYTE
 
   jmp @parse_character_loop
 
@@ -213,9 +203,9 @@ ROM_MONITOR:
   lda #$20
   jsr CHAR_OUT
   lda EXAMINE_H
-  jsr @print_byte
+  jsr PRINT_BYTE
   lda EXAMINE_L
-  jsr @print_byte
+  jsr PRINT_BYTE
 
   lda #$0D
   jsr CHAR_OUT
@@ -232,9 +222,9 @@ ROM_MONITOR:
   lda #$20
   jsr CHAR_OUT
   lda INDEX_H
-  jsr @print_byte
+  jsr PRINT_BYTE
   lda INDEX_L
-  jsr @print_byte
+  jsr PRINT_BYTE
 
   lda #$0D
   jsr CHAR_OUT
@@ -251,9 +241,9 @@ ROM_MONITOR:
   lda #$20
   jsr CHAR_OUT
   lda STORE_H
-  jsr @print_byte
+  jsr PRINT_BYTE
   lda STORE_L
-  jsr @print_byte
+  jsr PRINT_BYTE
 
   jmp @parse_character_loop
 
@@ -311,7 +301,7 @@ ROM_MONITOR:
   lda #$3A  ;':'
   jsr CHAR_OUT
   pla  ;A should be last on stack from soft reset
-  jsr @print_byte
+  jsr PRINT_BYTE
   
   lda #$20  ;'Space'
   jsr CHAR_OUT
@@ -320,7 +310,7 @@ ROM_MONITOR:
   lda #$3A  ;':'
   jsr CHAR_OUT
   pla  ;X should be next
-  jsr @print_byte
+  jsr PRINT_BYTE
   
   lda #$20  ;'Space'
   jsr CHAR_OUT
@@ -329,7 +319,7 @@ ROM_MONITOR:
   lda #$3A  ;':'
   jsr CHAR_OUT
   pla  ;Y should be next
-  jsr @print_byte
+  jsr PRINT_BYTE
   
   lda #$20  ;'Space'
   jsr CHAR_OUT
@@ -339,7 +329,7 @@ ROM_MONITOR:
   jsr CHAR_OUT
   tsx
   txa
-  jsr @print_byte
+  jsr PRINT_BYTE
   
   lda #$20  ;'Space'
   jsr CHAR_OUT
@@ -348,7 +338,7 @@ ROM_MONITOR:
   lda #$3A  ;':'
   jsr CHAR_OUT
   pla  ;Flags are last
-  jsr @print_byte
+  jsr PRINT_BYTE
 
   jmp @parse_character_loop
 
@@ -366,9 +356,9 @@ ROM_MONITOR:
   lda #$0D  ;'CR'
   jsr CHAR_OUT
   lda EXAMINE_H
-  jsr @print_byte
+  jsr PRINT_BYTE
   lda EXAMINE_L
-  jsr @print_byte
+  jsr PRINT_BYTE
   lda #$3A  ;':'
   jsr CHAR_OUT
 
@@ -376,7 +366,7 @@ ROM_MONITOR:
   lda #$20  ;'Space'
   jsr CHAR_OUT
   lda (EXAMINE_L)
-  jsr @print_byte
+  jsr PRINT_BYTE
   rts
 
 ;Parses hex value from input buffer until non hex (0-9,A-F) is found
@@ -433,30 +423,6 @@ ROM_MONITOR:
 @do_skip:
   iny
   jmp @skip_spaces
-
-;Prints the hex value out from the A register
-;Registers affected: A
-
-@print_byte:
-  pha
-  lsr
-  lsr
-  lsr
-  lsr
-  jsr @print_hex
-  pla
-
-@print_hex:
-  and #$0F
-  ora #$30
-  cmp #$3A
-  bcc @jmp_char_out  ;Print digits
-  adc #$06
-  jsr CHAR_OUT  ;Print Hex values
-  rts
-
-@jmp_char_out:
-  jmp CHAR_OUT
 
 @examine_str: .asciiz "Examine:"
 @store_str:   .asciiz "Store:"

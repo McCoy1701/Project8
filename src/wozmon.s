@@ -1,4 +1,13 @@
 
+;Wozmon Pointers
+XAML = $24
+XAMH = $25
+STL  = $26
+STH  = $27
+L    = $28
+H    = $29
+YSAV = $2A
+MODE = $2B
 IN = $0200
 
 .segment "WOZMON"

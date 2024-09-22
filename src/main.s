@@ -37,7 +37,30 @@ reset:
   jmp ROM_MONITOR
 
 irq_handler:
-  bit VIA_T1CL
+  pha
+  phx
+  phy
+  lda VIA_IFR
+  bpl @not_via
+  and VIA_IER
+  asl
+  bmi @service_timer_1
+  asl
+  bmi @service_timer_2
+  asl
+  bmi @service_cb_1
+  asl
+  bmi @service_cb_2
+  asl
+  bmi @service_SR
+  asl
+  bmi @service_ca_1
+  asl
+  bmi @service_ca_2
+  jmp @end_irq ;should get to here, but just in case
+
+@service_timer_1:
+  lda VIA_T1CL  ;Preforms a read on T1CL effectively reseting it
   inc TICKS
   bne @end_irq
   inc TICKS + 1
@@ -45,7 +68,31 @@ irq_handler:
   inc TICKS + 2
   bne @end_irq
   inc TICKS + 3
+  jmp @end_irq
+
+@service_timer_2:
+@service_cb_1:
+@service_cb_2:
+@service_SR:
+@service_ca_1:
+@service_ca_2:
+
+@not_via:
+  php
+  pla
+  asl
+  asl
+  asl
+  asl
+  bmi @return_to_monitor
+
 @end_irq:
+  ply
+  plx
+  pla
   rti
+
+@return_to_monitor:
+  jmp ROM_MONITOR
 
 .include "rom_monitor.s"
