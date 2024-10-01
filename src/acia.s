@@ -45,12 +45,13 @@ ACIA_CONTROL = $5003
 .segment "BIOS"
 
 ACIA_INITIALIZE:
+  jsr INIT_BUFFER
   pha
   lda #$00
   sta ACIA_STATUS
   lda #$1f
   sta ACIA_CONTROL
-  lda #$0b
+  lda #$09
   sta ACIA_COMMAND
   pla
   rts

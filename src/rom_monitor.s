@@ -1,7 +1,7 @@
 
 BUFFER = $0200
 
-.code
+.CODE
 
 ROM_MONITOR:
   lda #$6F  ;'o'
@@ -64,6 +64,8 @@ ROM_SOFT_RESET:
   beq @JMP_PRINT_REGISTERS
   cmp #$78  ;'x'
   beq @JMP_EXECUTE
+  cmp #$6D  ;'m'
+  beq @JMP_MINI_ASSEMBLER
   jmp ROM_MONITOR  ;Something bad happened
 
 @JMP_WRITE:
@@ -86,6 +88,9 @@ ROM_SOFT_RESET:
 
 @JMP_EXECUTE:
   jmp @execute
+
+@JMP_MINI_ASSEMBLER:
+  jmp MINI_ASSEMBLER
 
 @write:
   iny
