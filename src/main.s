@@ -16,7 +16,7 @@
 .include "lcd/lcd128.s"
 
 .code
-  reset:
+reset:
   ldx #$ff                ;initialize the stack pointer to 1ff
   txs
 

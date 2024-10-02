@@ -35,7 +35,32 @@ MINI_ASSEMBLER:
 @assemble:
   ldx #$00
   ldy #$00
+@assemble_mnemonic:
+  lda BUFFER, y
+  jsr @capitalize
+  cmp #'A'
+  bmi @escape
+  cmp #'Z'+1
+  bpl @escape
+  sta MNEMONIC, x
+  iny
+  inx
+  cpx #$03
+  bne @assemble_mnemonic
+
   jsr @get_opcode_from_table
 
 @get_opcode_from_table:
+  jmp ROM_SOFT_RESET
+;Capitalize ascii character in A register
+;Registers Affected: A
+
+@capitalize:
+  cmp #'a'
+  bmi @not_lowercase  ;Less than 'a' $61
+  cmp #'z'+1
+  bpl @not_lowercase  ;Greater than 'z' + 1 $7B
+  and #%11011111  ;Clear the 5th bit
+@not_lowercase:
+  rts
 

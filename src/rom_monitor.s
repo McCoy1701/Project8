@@ -115,40 +115,65 @@ ROM_SOFT_RESET:
 @write_done:
   jmp @parse_character_loop
 
+;Examine a block of address from hex value to hex value
+
+@block_examine:
+  iny
+  jsr @skip_spaces
+  jsr @parse_hex
+  lda HEX_L
+  sta EXAMINE_L
+  lda HEX_H
+  sta EXAMINE_H
+  
+  jsr @skip_spaces
+  jsr @parse_hex
+  lda HEX_L
+  sta INDEX_L
+  lda HEX_H
+  sta INDEX_H
+  jmp @print_new_line
+
 ;Read n bytes from the address in examine
 
 @read:
+  lda #$00  ;clear index
+  sta INDEX_L
+  sta INDEX_H
+  
   iny  ;current index is at 'r'
   jsr @skip_spaces
   jsr @parse_hex  ;get the hex value after r command
-  lda #$00  ;Set zero flag first time through
+
+  lda EXAMINE_L
+  adc HEX_L
   sta INDEX_L
+
+  lda EXAMINE_H
+  adc HEX_H
   sta INDEX_H
 
 @print_new_line:
   jsr @print_examine
 
-  lda INDEX_H
-  cmp HEX_H
-  bne @continue_reading
-
-  lda INDEX_L
-  cmp HEX_L
-  beq @done_reading
-
-@continue_reading:
-  inc INDEX_L
   inc EXAMINE_L
   bne @no_read_count_wrap
-  inc INDEX_H
   inc EXAMINE_H
 
 @no_read_count_wrap:
+  lda EXAMINE_H
+  cmp INDEX_H
+  bne @continue_reading
+
+  lda EXAMINE_L
+  cmp INDEX_L
+  beq @done_reading
+
+@continue_reading:
   jmp @print_new_line
 
 @done_reading:
   jmp @parse_character_loop
-
 
 ;Set the current, store, examine address
 ;Returns the new addsess in CURRENT, STORE, EXAMINE
@@ -250,48 +275,6 @@ ROM_SOFT_RESET:
   lda STORE_L
   jsr PRINT_BYTE
 
-  jmp @parse_character_loop
-
-;Examine a block of address from hex value to hex value
-
-@block_examine:
-  iny
-  jsr @skip_spaces
-  jsr @parse_hex
-  lda HEX_L
-  sta EXAMINE_L
-  lda HEX_H
-  sta EXAMINE_H
-  
-  jsr @skip_spaces
-  jsr @parse_hex
-  lda HEX_L
-  sta INDEX_L
-  lda HEX_H
-  sta INDEX_H
-  
-  lda #$00  ;Set zero flag first time through
-
-@print_new_block_line:
-  jsr @print_examine
-
-  lda EXAMINE_H
-  cmp INDEX_H
-  bne @continue_reading_block
-
-  lda EXAMINE_L
-  cmp INDEX_L
-  beq @done_reading_block
-
-@continue_reading_block:
-  inc EXAMINE_L
-  bne @no_examine_wrap
-  inc EXAMINE_H
-
-@no_examine_wrap:
-  jmp @print_new_block_line
-
-@done_reading_block:
   jmp @parse_character_loop
 
 ;Print out all the registers
