@@ -1,3 +1,4 @@
+.include "mnemonics_table.s"
 
 BUFFER = $0200
 
@@ -92,6 +93,8 @@ ROM_SOFT_RESET:
 @JMP_MINI_ASSEMBLER:
   jmp MINI_ASSEMBLER
 
+;Write n amount of data from BUFFER to current STORE address
+
 @write:
   iny
 
@@ -132,7 +135,7 @@ ROM_SOFT_RESET:
   sta INDEX_L
   lda HEX_H
   sta INDEX_H
-  jmp @print_new_line
+  jmp @begin_data_output
 
 ;Read n bytes from the address in examine
 
@@ -153,8 +156,25 @@ ROM_SOFT_RESET:
   adc HEX_H
   sta INDEX_H
 
+@begin_data_output:
+  lda #$00
+
 @print_new_line:
-  jsr @print_examine
+  bne @print_data
+  lda #$0D  ;'CR'
+  jsr CHAR_OUT
+  lda EXAMINE_H
+  jsr PRINT_BYTE
+  lda EXAMINE_L
+  jsr PRINT_BYTE
+  lda #$3A  ;':'
+  jsr CHAR_OUT
+
+@print_data:
+  lda #$20  ;'Space'
+  jsr CHAR_OUT
+  lda (EXAMINE_L)
+  jsr PRINT_BYTE
 
   inc EXAMINE_L
   bne @no_read_count_wrap
@@ -170,6 +190,8 @@ ROM_SOFT_RESET:
   beq @done_reading
 
 @continue_reading:
+  lda EXAMINE_L
+  and #$07
   jmp @print_new_line
 
 @done_reading:
@@ -334,28 +356,6 @@ ROM_SOFT_RESET:
 
 @execute:
   jmp (EXAMINE_L)
-
-;Print out the location of examine, and its contents.
-
-@print_examine:
-  lda EXAMINE_L
-  and #$07
-  bne @print_examine_data
-  lda #$0D  ;'CR'
-  jsr CHAR_OUT
-  lda EXAMINE_H
-  jsr PRINT_BYTE
-  lda EXAMINE_L
-  jsr PRINT_BYTE
-  lda #$3A  ;':'
-  jsr CHAR_OUT
-
-@print_examine_data:
-  lda #$20  ;'Space'
-  jsr CHAR_OUT
-  lda (EXAMINE_L)
-  jsr PRINT_BYTE
-  rts
 
 ;Parses hex value from input buffer until non hex (0-9,A-F) is found
 ;Returns the hex values found from input buffer in HEX_L, HEX_H
