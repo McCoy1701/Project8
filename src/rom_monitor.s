@@ -1,4 +1,3 @@
-.include "mnemonics_table.s"
 
 BUFFER = $0200
 
@@ -199,7 +198,7 @@ ROM_SOFT_RESET:
 
 ;Set the current, store, examine address
 ;Returns the new addsess in CURRENT, STORE, EXAMINE
-;Registers affected: A, X, Y, HEX_L, HEX_H, CURRENT_L, CURRENT_H, STORE_L, STORE_H, EXAMINE_L, EXAMINE_H, INPUT_BUFFER
+;Registers affected: A, X, Y
 
 @set_address:
   iny
@@ -300,7 +299,7 @@ ROM_SOFT_RESET:
   jmp @parse_character_loop
 
 ;Print out all the registers
-;A, X, Y, Stack, Flags
+;Registers affected: A, X, Y
 
 @print_registers:
   iny
@@ -359,7 +358,7 @@ ROM_SOFT_RESET:
 
 ;Parses hex value from input buffer until non hex (0-9,A-F) is found
 ;Returns the hex values found from input buffer in HEX_L, HEX_H
-;Registers affected: A, Y, X, INPUT_BUFFER, HEX_L, HEX_H
+;Registers affected: A, Y, X
 
 @parse_hex:
   lda #$00
@@ -401,7 +400,7 @@ ROM_SOFT_RESET:
   jmp ROM_MONITOR
 
 ;Skips spaces encountered in the input buffer
-;Registers affected: A, Y, INPUT_BUFFER
+;Registers affected: A, Y
 
 @skip_spaces:
   lda BUFFER, y

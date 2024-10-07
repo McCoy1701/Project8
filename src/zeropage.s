@@ -1,9 +1,12 @@
+;Helper Pointers
+TEMP0 = $DC  ;2byes
+TEMP1 = $DE  ;2bytes
 
 ;Mini Assembler Pointers
 OP_INDEX     = $E0
-OPCODE       = $E1
-ADDRESS_MODE = $E2
-MNEMONIC     = $E3  ;3bytes
+ADDRESS_MODE = $E1
+MNEMONIC     = $E2  ;3bytes
+OPCODE       = $E5
 OPERAND      = $E6  ;2bytes
 
 ;Rom Monitor Pointers

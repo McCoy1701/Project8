@@ -36,5 +36,6 @@ reset:
 
 .include "irq_handler.s"
 .include "rom_monitor.s"
+.include "mnemonics_table.s"
 .include "mini_assembler.s"
 
