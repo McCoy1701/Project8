@@ -237,7 +237,15 @@ MINI_ASSEMBLER:
   lda OPCODE
   sta (STORE_L)
   jsr @inc_store
+  
+  lda ADDRESS_MODE
+  cmp #AM_ACCUMULATOR
+  bmi @has_operand
+  cmp #AM_STACK+1
+  bpl @has_operand
+  jmp MINI_ASSEMBLER
 
+@has_operand:
   lda OPERAND
   sta (STORE_L)
   jsr @inc_store
