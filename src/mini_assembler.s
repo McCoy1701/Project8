@@ -62,14 +62,14 @@ MINI_ASSEMBLER:
   cmp #$24  ;'$'
   beq @jmp_operand_data  ;Sets absolute/zeropage addressing mode
   cmp #$0D  ;'CR'
-  beq @jmp_fetch_opcode
+  beq @jmp_assemble_opcode
   jmp ROM_SOFT_RESET
 
 @jmp_operand_data:
   jmp @operand_data
 
-@jmp_fetch_opcode:
-  jmp @fetch_opcode
+@jmp_assemble_opcode:
+  jmp @assemble_opcode
 
 @indirect_am:
   iny
@@ -137,6 +137,8 @@ MINI_ASSEMBLER:
   beq @hex_operand
   cmp #$25  ;'%'
   beq @binary_operand
+  ldy #$01
+  jsr @print_error
   jmp ROM_SOFT_RESET  ; '#' should always be followed by a '$' or '%'
 
 @hex_operand:
@@ -144,6 +146,7 @@ MINI_ASSEMBLER:
   jsr @parse_hex  ;Should leave y pointing to the 'CR'
   lda HEX_L
   sta OPERAND
+  stz OPERAND+1
   jmp @parse_operand
 
 @binary_operand:
@@ -151,6 +154,7 @@ MINI_ASSEMBLER:
   jsr @parse_binary  ;Should leave y pointing at 'CR'
   lda HEX_L
   sta OPERAND
+  stz OPERAND+1
   jmp @parse_operand
 
 @operand_data:
@@ -163,6 +167,7 @@ MINI_ASSEMBLER:
   bne @set_absolute
   lda #AM_ZEROPAGE
   sta ADDRESS_MODE
+  stz OPERAND+1
   jmp @check_operand_indexed
 
 @set_absolute:
@@ -181,6 +186,8 @@ MINI_ASSEMBLER:
   beq @x_indexed
   cmp #$59  ;'Y'
   beq @y_indexed
+  ldy #$02
+  jsr @print_error
   jmp ROM_SOFT_RESET ;Shouldn't get here
 
 @x_indexed:
@@ -213,8 +220,87 @@ MINI_ASSEMBLER:
 @not_indexed:
   jmp @parse_operand
 
-@fetch_opcode:
+@assemble_opcode:
+  jsr @fetch_opcode
+
+  lda OPCODE
+  cmp #OP_UNK
+  bne @write_opcode
+  lda ADDRESS_MODE
+  cmp #AM_UNKNOWN
+  bne @write_opcode
+  ldy #$03
+  jsr @print_error
   jmp ROM_SOFT_RESET
+
+@write_opcode:
+  lda OPCODE
+  sta (STORE_L)
+  jsr @inc_store
+
+  lda OPERAND
+  sta (STORE_L)
+  jsr @inc_store
+
+  lda OPERAND+1
+  bne @store_operand_lsb
+  jmp MINI_ASSEMBLER
+
+@store_operand_lsb:
+  sta (STORE_L)
+  jsr @inc_store
+  jmp MINI_ASSEMBLER
+
+@inc_store:
+  inc STORE_L
+  bne @no_store_wrap
+  inc STORE_H
+@no_store_wrap:
+  rts
+
+@fetch_opcode:
+  ldx #$00
+  lda #<OPCODES
+  sta TEMP1
+  lda #>OPCODES
+  sta TEMP1+1
+
+@opcode_search:
+  ldy #$00
+  lda OP_INDEX
+  cmp (TEMP1), y
+  bne @next_opcode
+  
+  iny
+  lda ADDRESS_MODE
+  cmp (TEMP1), y
+  bne @next_opcode
+
+  stx OPCODE
+  rts
+
+@next_opcode:
+  inx
+  clc
+  lda TEMP1
+  adc #$02
+  sta TEMP1
+  lda TEMP1+1
+  adc #$00
+  sta TEMP1+1
+
+  lda TEMP1
+  cmp #<OPCODES_END
+  bne @opcode_search
+  lda TEMP1+1
+  cmp #>OPCODES_END
+  bne @opcode_search
+
+  lda #OP_UNK
+  sta OPCODE
+  lda #AM_UNKNOWN
+  sta ADDRESS_MODE
+  rts
 
 @get_opcode_from_table:
   ldx #$00  ;clear x, x will be the index into the menmonics table
@@ -266,121 +352,42 @@ MINI_ASSEMBLER:
 @check_for_accumulator_implied_relative_stack_addressing:
   lda OP_INDEX
   cmp #OP_ASL
-  beq @accumulator
-  cmp #OP_INC
-  beq @accumulator
-  cmp #OP_ROL
-  beq @accumulator
-  cmp #OP_DEC
-  beq @accumulator
-  cmp #OP_LSR
-  beq @accumulator
-  cmp #OP_ROR
-  beq @accumulator
-
-  cmp #OP_CLC
-  beq @implied
-  cmp #OP_SEC
-  beq @implied
-  cmp #OP_CLI
-  beq @implied
-  cmp #OP_SEI
-  beq @implied
-  cmp #OP_DEY
-  beq @implied
-  cmp #OP_TYA
-  beq @implied
-  cmp #OP_TAY
-  beq @implied
-  cmp #OP_CLV
-  beq @implied
-  cmp #OP_INY
-  beq @implied
-  cmp #OP_CLD
-  beq @implied
-  cmp #OP_INX
-  beq @implied
-  cmp #OP_SED
-  beq @implied
-  cmp #OP_NOP
-  beq @implied
-  cmp #OP_STP
-  beq @implied
-  cmp #OP_WAI
-  beq @implied
-  cmp #OP_DEX
-  beq @implied
-  cmp #OP_TSX
-  beq @implied
-  cmp #OP_TAX
-  beq @implied
-  cmp #OP_TXS
-  beq @implied
-  cmp #OP_TXA
-  beq @implied
-  
-  cmp #OP_BPL
-  beq @relative
-  cmp #OP_BMI
-  beq @relative
-  cmp #OP_BVC
-  beq @relative
-  cmp #OP_BVS
-  beq @relative
-  cmp #OP_BRA
-  beq @relative
-  cmp #OP_BCC
-  beq @relative
-  cmp #OP_BCS
-  beq @relative
-  cmp #OP_BNE
-  beq @relative
-  cmp #OP_BEQ
-  beq @relative
-  cmp #OP_BBR
-  beq @relative
-  cmp #OP_BBS
-  beq @relative
-
-  cmp #OP_BRK
-  beq @stack
-  cmp #OP_RTI
-  beq @stack
-  cmp #OP_RTS
-  beq @stack
-  cmp #OP_PHP
-  beq @stack
-  cmp #OP_PLP
-  beq @stack
-  cmp #OP_PHA
-  beq @stack
-  cmp #OP_PLA
-  beq @stack
-  cmp #OP_PHY
-  beq @stack
-  cmp #OP_PLY
-  beq @stack
-  cmp #OP_PHX
-  beq @stack
-  cmp #OP_PLX
-  beq @stack
-  
-  jmp @end_check  ;nothing checked out
+  bmi @not_accumulator  ;Less than OP_ASL
+  cmp #OP_INC+1
+  bpl @not_accumulator  ;Greater than OP_INC
 
 @accumulator:
   lda #AM_ACCUMULATOR
   sta ADDRESS_MODE
   jmp @end_check
 
+@not_accumulator:
+  cmp #OP_CLC
+  bmi @not_implied  ;Less than OP_CLC
+  cmp #OP_STP+1
+  bpl @not_implied  ;Greater than OP_STP
+
 @implied:
   lda #AM_IMPLIED
   sta ADDRESS_MODE
   jmp @end_check
 
+@not_implied:  
+  cmp #OP_BPL
+  bmi @not_relative
+  cmp #OP_BBS+1
+  bpl @not_relative
+
 @relative:
   lda #AM_RELATIVE
   sta ADDRESS_MODE
   jmp @end_check
+
+@not_relative:
+  cmp #OP_BRK
+  bmi @end_check
+  cmp #OP_PLX+1
+  bpl @end_check
 
 @stack:
   lda #AM_STACK
@@ -450,6 +457,7 @@ MINI_ASSEMBLER:
 @parse_binary:
   lda #$00
   sta HEX_L
+  sta HEX_H
   sty BUFFER_INDEX
 
 @get_binary:
@@ -487,4 +495,20 @@ MINI_ASSEMBLER:
 @do_skip:
   iny
   jmp @skip_spaces
+
+@print_error:
+  ldx #$00
+@print_error_str:
+  lda @error_str,x
+  beq @done_error_print
+  jsr CHAR_OUT
+  inx
+  jmp @print_error_str
+
+@done_error_print:
+  tya
+  jsr PRINT_BYTE
+  rts
+
+@error_str: .asciiz "syntax error: "
 

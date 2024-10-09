@@ -1,72 +1,72 @@
 
-OP_BRK = $00
-OP_BPL = $01
-OP_JSR = $02
-OP_BMI = $03
-OP_RTI = $04
-OP_BVC = $05
-OP_RTS = $06
-OP_BVS = $07
-OP_BRA = $08
-OP_BCC = $09
-OP_LDY = $0A
-OP_BCS = $0B
-OP_CPY = $0C
-OP_BNE = $0D
-OP_CPX = $0E
-OP_BEQ = $0F
-OP_ORA = $10
-OP_AND = $11
-OP_ADC = $12
-OP_STA = $13
-OP_LDA = $14
-OP_CMP = $15
-OP_SBC = $16
-OP_TSB = $17
-OP_TRB = $18
-OP_BIT = $19
-OP_STZ = $1A
-OP_STY = $1B
-OP_ASL = $1C
-OP_ROL = $1D
-OP_LSR = $1E
-OP_ROR = $1F
-OP_STX = $20
-OP_DEC = $21
-OP_INC = $22
-OP_RMB = $23
-OP_SMB = $24
-OP_PHP = $25
-OP_CLC = $26
-OP_PLP = $27
-OP_SEC = $28
+OP_ASL = $00  ;Accumulator
+OP_ROL = $01
+OP_LSR = $02
+OP_ROR = $03
+OP_DEC = $04
+OP_INC = $05
+OP_CLC = $06  ;Implied
+OP_SEC = $07
+OP_CLI = $08
+OP_SEI = $09
+OP_DEY = $0A
+OP_TYA = $0B
+OP_TAY = $0C
+OP_CLV = $0D
+OP_INY = $0E
+OP_CLD = $0F
+OP_INX = $10
+OP_SED = $11
+OP_TXA = $12
+OP_TXS = $13
+OP_TAX = $14
+OP_TSX = $15
+OP_DEX = $16
+OP_WAI = $17
+OP_STP = $18
+OP_BPL = $19  ;Relative
+OP_BMI = $1A
+OP_BVC = $1B
+OP_BVS = $1C
+OP_BRA = $1D
+OP_BCC = $1E
+OP_BCS = $1F
+OP_BNE = $20
+OP_BEQ = $21
+OP_BBR = $22
+OP_BBS = $23
+OP_BRK = $24  ;Stack
+OP_RTI = $25
+OP_RTS = $26
+OP_PHP = $27
+OP_PLP = $28
 OP_PHA = $29
-OP_CLI = $2A
-OP_PLA = $2B
-OP_SEI = $2C
-OP_DEY = $2D
-OP_TYA = $2E
-OP_TAY = $2F
-OP_CLV = $30
-OP_INY = $31
-OP_CLD = $32
-OP_INX = $33
-OP_SED = $34
-OP_PHY = $35
-OP_PLY = $36
-OP_TXA = $37
-OP_TXS = $38
-OP_TAX = $39
-OP_TSX = $3A
-OP_DEX = $3B
-OP_PHX = $3C
-OP_NOP = $3D
-OP_PLX = $3E
-OP_WAI = $3F
-OP_STP = $40
-OP_JMP = $41
-OP_BBR = $42
-OP_BBS = $43
+OP_PLA = $2A
+OP_PHY = $2B
+OP_PLY = $2C
+OP_PHX = $2D
+OP_PLX = $2E
+OP_JSR = $2F
+OP_LDY = $30
+OP_CPY = $31
+OP_CPX = $32
+OP_ORA = $33
+OP_AND = $34
+OP_ADC = $35
+OP_STA = $36
+OP_LDA = $37
+OP_CMP = $38
+OP_SBC = $39
+OP_TSB = $3A
+OP_TRB = $3B
+OP_BIT = $3C
+OP_STZ = $3D
+OP_STY = $3E
+OP_STX = $3F
+OP_RMB = $40
+OP_SMB = $41
+OP_NOP = $42
+OP_JMP = $43
 OP_EOR = $44
 OP_LDX = $45
 OP_UNK = $46
@@ -92,22 +92,57 @@ AM_UNKNOWN                   = $10
 .code
 
 MNEMONICS:
-.byte "BRK"
+.byte "ASL"
+.byte "ROL"
+.byte "LSR"
+.byte "ROR"
+.byte "DEC"
+.byte "INC"
+.byte "CLC"
+.byte "SEC"
+.byte "CLI"
+.byte "SEI"
+.byte "DEY"
+.byte "TYA"
+.byte "TAY"
+.byte "CLV"
+.byte "INY"
+.byte "CLD"
+.byte "INX"
+.byte "SED"
+.byte "TXA"
+.byte "TXS"
+.byte "TAX"
+.byte "TSX"
+.byte "DEX"
+.byte "WAI"
+.byte "STP"
 .byte "BPL"
-.byte "JSR"
 .byte "BMI"
-.byte "RTI"
 .byte "BVC"
-.byte "RTS"
 .byte "BVS"
 .byte "BRA"
 .byte "BCC"
-.byte "LDY"
 .byte "BCS"
-.byte "CPY"
 .byte "BNE"
-.byte "CPX"
 .byte "BEQ"
+.byte "BBR"
+.byte "BBS"
+.byte "BRK"
+.byte "RTI"
+.byte "RTS"
+.byte "PHP"
+.byte "PLP"
+.byte "PHA"
+.byte "PLA"
+.byte "PHY"
+.byte "PLY"
+.byte "PHX"
+.byte "PLX"
+.byte "JSR"
+.byte "LDY"
+.byte "CPY"
+.byte "CPX"
 .byte "ORA"
 .byte "AND"
 .byte "ADC"
@@ -120,47 +155,14 @@ MNEMONICS:
 .byte "BIT"
 .byte "STZ"
 .byte "STY"
-.byte "ASL"
-.byte "ROL"
-.byte "LSR"
-.byte "ROR"
 .byte "STX"
-.byte "DEC"
-.byte "INC"
 .byte "RMB"
 .byte "SMB"
-.byte "PHP"
-.byte "CLC"
-.byte "PLP"
-.byte "SEC"
-.byte "PHA"
-.byte "CLI"
-.byte "PLA"
-.byte "SEI"
-.byte "DEY"
-.byte "TYA"
-.byte "TAY"
-.byte "CLV"
-.byte "INY"
-.byte "CLD"
-.byte "INX"
-.byte "SED"
-.byte "PHY"
-.byte "PLY"
-.byte "TXA"
-.byte "TXS"
-.byte "TAX"
-.byte "TSX"
-.byte "DEX"
-.byte "PHX"
 .byte "NOP"
-.byte "PLX"
-.byte "WAI"
-.byte "STP"
 .byte "JMP"
-.byte "BBR"
-.byte "BBS"
-.byte "???"  ;unknown
+.byte "EOR"
+.byte "LDX" 
+.byte "UNK"  ;unknown
 MNEMONICS_END:
 
 OPCODES:
@@ -184,7 +186,7 @@ OPCODES:
   .byte OP_ORA, AM_ZEROPAGE_INDIRECT_INDEXED  ;11
   .byte OP_ORA, AM_ZEROPAGE_INDIRECT          ;12
   .byte OP_UNK, AM_UNKNOWN                    ;13
-  .byte OP_TRB, AM_ZEROPAGE_INDIRECT          ;14
+  .byte OP_TRB, AM_ZEROPAGE                   ;14
   .byte OP_ORA, AM_ZEROPAGE_INDEXED_X         ;15
   .byte OP_ASL, AM_ZEROPAGE_INDEXED_X         ;16
   .byte OP_RMB, AM_ZEROPAGE                   ;17
@@ -275,7 +277,7 @@ OPCODES:
   .byte OP_JMP, AM_ABSOLUTE_INDIRECT          ;6C
   .byte OP_ADC, AM_ABSOLUTE                   ;6D
   .byte OP_ROR, AM_ABSOLUTE                   ;6E
-  .byte OP_BBR, AM_ABSOLUTE                   ;6F
+  .byte OP_BBR, AM_RELATIVE                   ;6F
   .byte OP_BVS, AM_RELATIVE                   ;70
   .byte OP_ADC, AM_ZEROPAGE_INDIRECT_INDEXED  ;71
   .byte OP_ADC, AM_ZEROPAGE                   ;72
@@ -342,7 +344,7 @@ OPCODES:
   .byte OP_BBS, AM_RELATIVE                   ;AF
   .byte OP_BCS, AM_RELATIVE                   ;B0
   .byte OP_LDA, AM_ZEROPAGE_INDIRECT_INDEXED  ;B1
-  .byte OP_LDA, AM_ZEROPAGE                   ;B2
+  .byte OP_LDA, AM_ZEROPAGE_INDIRECT          ;B2
   .byte OP_UNK, AM_UNKNOWN                    ;B3
   .byte OP_LDY, AM_ZEROPAGE_INDEXED_X         ;B4
   .byte OP_LDA, AM_ZEROPAGE_INDEXED_X         ;B5
@@ -406,7 +408,7 @@ OPCODES:
   .byte OP_BBS, AM_RELATIVE                   ;EF
   .byte OP_BEQ, AM_RELATIVE                   ;F0
   .byte OP_SBC, AM_ZEROPAGE_INDIRECT_INDEXED  ;F1
-  .byte OP_SBC, AM_ZEROPAGE                   ;F2
+  .byte OP_SBC, AM_ZEROPAGE_INDIRECT          ;F2
   .byte OP_UNK, AM_UNKNOWN                    ;F3
   .byte OP_UNK, AM_UNKNOWN                    ;F4
   .byte OP_SBC, AM_ZEROPAGE_INDEXED_X         ;F5
@@ -420,6 +422,5 @@ OPCODES:
   .byte OP_SBC, AM_ABSOLUTE_INDEXED_X         ;FD
   .byte OP_INC, AM_ABSOLUTE_INDEXED_X         ;FE
   .byte OP_BBS, AM_RELATIVE                   ;FF
-
 OPCODES_END:
 
