@@ -1,6 +1,8 @@
 ;Helper Pointers
-TEMP0 = $DC  ;2byes
-TEMP1 = $DE  ;2bytes
+TEMP_WORD0 = $D8  ;2bytes
+TEMP_WORD1 = $DA  ;2bytes
+TEMP_WORD2 = $DC  ;2bytes
+TEMP_WORD3 = $DE  ;2bytes
 
 ;Mini Assembler Pointers
 OP_INDEX     = $E0

@@ -49,9 +49,9 @@ MINI_ASSEMBLER:
   bne @assemble_mnemonic
 
   jsr @get_opcode_from_table  ;Sets OP_INDEX from the mnemonic given
-  jsr @check_for_accumulator_implied_relative_stack_addressing
   iny
   jsr @skip_spaces
+  jsr @check_for_accumulator_implied_relative_stack_addressing
 
 @parse_operand:
   lda BUFFER, y
@@ -269,19 +269,19 @@ MINI_ASSEMBLER:
 @fetch_opcode:
   ldx #$00
   lda #<OPCODES
-  sta TEMP1
+  sta TEMP_WORD1
   lda #>OPCODES
-  sta TEMP1+1
+  sta TEMP_WORD1+1
 
 @opcode_search:
   ldy #$00
   lda OP_INDEX
-  cmp (TEMP1), y
+  cmp (TEMP_WORD1), y
   bne @next_opcode
   
   iny
   lda ADDRESS_MODE
-  cmp (TEMP1), y
+  cmp (TEMP_WORD1), y
   bne @next_opcode
 
   stx OPCODE
@@ -290,17 +290,17 @@ MINI_ASSEMBLER:
 @next_opcode:
   inx
   clc
-  lda TEMP1
+  lda TEMP_WORD1
   adc #$02
-  sta TEMP1
-  lda TEMP1+1
+  sta TEMP_WORD1
+  lda TEMP_WORD1+1
   adc #$00
-  sta TEMP1+1
+  sta TEMP_WORD1+1
 
-  lda TEMP1
+  lda TEMP_WORD1
   cmp #<OPCODES_END
   bne @opcode_search
-  lda TEMP1+1
+  lda TEMP_WORD1+1
   cmp #>OPCODES_END
   bne @opcode_search
 
@@ -313,24 +313,24 @@ MINI_ASSEMBLER:
 @get_opcode_from_table:
   ldx #$00  ;clear x, x will be the index into the menmonics table
   lda #<MNEMONICS  ;Load low-byte of mnemonics table
-  sta TEMP0  ;Save it
+  sta TEMP_WORD0  ;Save it
   lda #>MNEMONICS  ;Load high-byte of mnemonics table
-  sta TEMP0+1
+  sta TEMP_WORD0+1
 
 @mnemonic_search:
   ldy #$00  ;clear y, index into buffer
   lda MNEMONIC, y
-  cmp (TEMP0),y
+  cmp (TEMP_WORD0),y
   bne @next_mnemonic
   
   iny
   lda MNEMONIC, y
-  cmp (TEMP0),y
+  cmp (TEMP_WORD0),y
   bne @next_mnemonic
   
   iny
   lda MNEMONIC, y
-  cmp (TEMP0),y
+  cmp (TEMP_WORD0),y
   bne @next_mnemonic
 
   stx OP_INDEX
@@ -339,17 +339,17 @@ MINI_ASSEMBLER:
 @next_mnemonic:
   inx
   clc
-  lda TEMP0
+  lda TEMP_WORD0
   adc #$03
-  sta TEMP0
-  lda TEMP0+1
+  sta TEMP_WORD0
+  lda TEMP_WORD0+1
   adc #$00
-  sta TEMP0+1
+  sta TEMP_WORD0+1
 
-  lda TEMP0
+  lda TEMP_WORD0
   cmp #<MNEMONICS_END
   bne @mnemonic_search
-  lda TEMP0+1
+  lda TEMP_WORD0+1
   cmp #>MNEMONICS_END
   bne @mnemonic_search
 
@@ -389,6 +389,39 @@ MINI_ASSEMBLER:
 @relative:
   lda #AM_RELATIVE
   sta ADDRESS_MODE
+  lda BUFFER, y
+  cmp #$24  ;'$'
+  beq @get_relative_address
+  ldy #$01  ;No operand
+  jsr @print_error
+  jmp ROM_SOFT_RESET
+
+@get_relative_address:
+  iny
+  jsr @parse_hex
+  
+  cld
+  sec
+  
+  lda HEX_L
+  sbc STORE_L
+  sta TEMP_WORD2
+  
+  lda HEX_H
+  sbc STORE_H
+  sta TEMP_WORD2+1
+
+  cmp #$FF
+  beq @valid_range
+  cmp #$00
+  beq @valid_range
+  ldy #$04
+  jsr @print_error
+  jmp ROM_SOFT_RESET
+
+@valid_range:
+  lda TEMP_WORD2
+  sta OPERAND
   jmp @end_check
 
 @not_relative:
