@@ -1,7 +1,7 @@
 .setcpu"65c02"
 .debuginfo
 
-.segment"RESET_VECTORS"
+.segment "RESET_VECTORS"
   .word $0000
   .word reset
   .word IRQ_HANDLER
@@ -38,4 +38,6 @@ reset:
 .include "rom_monitor.s"
 .include "mnemonics_table.s"
 .include "mini_assembler.s"
+
+.include "games/blackjack.s"
 

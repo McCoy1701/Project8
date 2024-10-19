@@ -86,7 +86,7 @@ lcd_text_mode:
   pla
   rts
 
-lcd_grahpics_mode:
+lcd_graphics_mode:
   pha
   lda #FUNCTION_SET_4BIT_EXTENDED
   sta SPI_MOSI

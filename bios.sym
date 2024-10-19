@@ -4,12 +4,16 @@ al 0000D6 .__BIOS_SIZE__
 al 0080D6 .__CODE_LOAD__
 al 0080D6 .__CODE_RUN__
 al 000893 .__CODE_SIZE__
+al 008969 .__GAMES_LOAD__
+al 008969 .__GAMES_RUN__
+al 000004 .__GAMES_SIZE__
 al 00F000 .__LCD_LOAD__
 al 00F000 .__LCD_RUN__
 al 000149 .__LCD_SIZE__
 al 00EF00 .__UTILS_LOAD__
 al 00EF00 .__UTILS_RUN__
 al 000030 .__UTILS_SIZE__
+al 008969 .BLACKJACK
 al 008955 .@done_error_print
 al 00895A .@error_str
 al 008949 .@print_error_str
@@ -140,7 +144,7 @@ al 00809E .@not_acia
 al 0080FD .ROM_SOFT_RESET
 al 00807F .@not_break
 al 0080F3 .ROM_MONITOR
-al 00F132 .lcd_grahpics_mode
+al 00F132 .lcd_graphics_mode
 al 00F111 .lcd_text_mode
 al 00F0E6 .lcd_initialize
 al 00F0DD .print_char
