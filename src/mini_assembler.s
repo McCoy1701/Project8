@@ -411,6 +411,14 @@ MINI_ASSEMBLER:
   sbc STORE_H
   sta TEMP_WORD2+1
 
+  lda TEMP_WORD2  ;don't count the opcode and data in the branch
+  sbc #$02
+  sta TEMP_WORD2
+
+  lda TEMP_WORD2+1
+  sbc #$00
+  sta TEMP_WORD2+1
+
   cmp #$FF
   beq @valid_range
   cmp #$00

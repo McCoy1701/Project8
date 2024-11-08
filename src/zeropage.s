@@ -1,4 +1,5 @@
 ;Helper Pointers
+SEED       = $D6  ;2bytes
 TEMP_WORD0 = $D8  ;2bytes
 TEMP_WORD1 = $DA  ;2bytes
 TEMP_WORD2 = $DC  ;2bytes

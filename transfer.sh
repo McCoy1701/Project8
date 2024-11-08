@@ -1,2 +1,2 @@
 #!/bin/bash
-scp bin/* pi@devpi.local:~/Received
+scp bin/* pi@raspberrypi.local:~/Received

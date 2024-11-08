@@ -15,6 +15,10 @@
 .include "lcd/spi_lcd128.s"
 .include "lcd/lcd128.s"
 
+.include "sd_card/sd_commands.s"
+.include "sd_card/sd_spi.s"
+.include "sd_card/sd_basic_read_write.s"
+
 .code
 reset:
   ldx #$ff                ;initialize the stack pointer to 1ff
@@ -39,5 +43,7 @@ reset:
 .include "mnemonics_table.s"
 .include "mini_assembler.s"
 
+.include "memory_test.s"
 .include "games/blackjack.s"
+.include "games/pseudo_random_number_generator.s"
 
