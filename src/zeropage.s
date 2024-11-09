@@ -1,3 +1,10 @@
+
+;RAM Test Pointers
+RAM_TEST     = $D0
+START_INDEX  = $D1
+WRITE_INDEX  = $D3
+TEST_PATTERN = $D5
+
 ;Helper Pointers
 SEED       = $D6  ;2bytes
 TEMP_WORD0 = $D8  ;2bytes
