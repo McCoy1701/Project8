@@ -69,7 +69,8 @@ OP_NOP = $42
 OP_JMP = $43
 OP_EOR = $44
 OP_LDX = $45
-OP_UNK = $46
+OP_LBL = $46
+OP_UNK = $47
 
 AM_ABSOLUTE                  = $00
 AM_ABSOLUTE_INDEXED_INDIRECT = $01
@@ -161,7 +162,8 @@ MNEMONICS:
 .byte "NOP"
 .byte "JMP"
 .byte "EOR"
-.byte "LDX" 
+.byte "LDX"
+.byte "LBL"
 .byte "UNK"  ;unknown
 MNEMONICS_END:
 

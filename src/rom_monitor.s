@@ -66,6 +66,8 @@ ROM_SOFT_RESET:
   beq @JMP_EXECUTE
   cmp #$6D  ;'m'
   beq @JMP_MINI_ASSEMBLER
+  cmp #$6D  ;'l'
+  beq @JMP_MINI_DISASSEMBLER
   jmp ROM_MONITOR  ;Something bad happened
 
 @JMP_WRITE:
@@ -91,6 +93,9 @@ ROM_SOFT_RESET:
 
 @JMP_MINI_ASSEMBLER:
   jmp MINI_ASSEMBLER
+
+@JMP_MINI_DISASSEMBLER:
+  jmp MINI_DISASSEMBLER
 
 ;Write n amount of data from BUFFER to current STORE address
 

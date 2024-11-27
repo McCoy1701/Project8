@@ -1,16 +1,21 @@
 .CODE
 
+;------------------------------;
+;        Entry Point           ;
+;------------------------------;
+
 MINI_ASSEMBLER:
-  lda STORE_H
+  lda STORE_H  ;Print starting location of assembler
   jsr PRINT_BYTE
   lda STORE_L
   jsr PRINT_BYTE
   lda #$3A  ;':'
   jsr CHAR_OUT
   
-  ldy #$00
+  ldy #$00  ;Zero index into text buffer
+
 @get_char:
-  jsr CHAR_IN
+  jsr CHAR_IN  ;Wait for input from the user
   bcc @get_char
   sta BUFFER, y
   cmp #$08  ;backspace
@@ -20,29 +25,34 @@ MINI_ASSEMBLER:
   cmp #$0D  ;'CR'
   beq @assemble
   iny
-  bpl @get_char
+  bpl @get_char  ;Buffer overflows when bit 7 is set
   jmp ROM_SOFT_RESET
 
-@escape:
+@escape:  ;Escape backs out to memory monitor
   jmp ROM_SOFT_RESET
 
-@backspace:
+@backspace:  ;Decrements the index into the text buffer so the last byte can be rewritten
   cpy #$00
   beq @get_char
   dey
   jmp @get_char
 
+;------------------------------;
+; Start of the Assembly Process;
+;------------------------------;
+
 @assemble:
-  ldx #$00
-  ldy #$00
+  ldx #$00  ;X is the count of how many characters have been stored into MNEMONIC
+  ldy #$00  ;Reset index into text buffer
+
 @assemble_mnemonic:
   lda BUFFER, y
-  jsr @capitalize
-  cmp #'A'
-  bmi @escape
+  jsr @capitalize  ;coverts lowercase into uppercase
+  cmp #'A'  ;Checking if it is actually a uppercase letter
+  bmi @escape ;If not just reset to memory monitor
   cmp #'Z'+1
   bpl @escape
-  sta MNEMONIC, x
+  sta MNEMONIC, x  ;If it is an uppercase letter between 'A - Z+1'
   iny
   inx
   cpx #$03
@@ -53,6 +63,10 @@ MINI_ASSEMBLER:
   jsr @skip_spaces
   jsr @check_for_accumulator_implied_relative_stack_addressing
 
+;------------------------------------;
+; Parse data after assembly mnemonic ;
+;------------------------------------;
+
 @parse_operand:
   lda BUFFER, y
   cmp #$28  ;'('
@@ -61,6 +75,8 @@ MINI_ASSEMBLER:
   beq @immediate_am
   cmp #$24  ;'$'
   beq @jmp_operand_data  ;Sets absolute/zeropage addressing mode
+  cmp #$22  ;'"'
+  beq @jmp_label_add
   cmp #$0D  ;'CR'
   beq @jmp_assemble_opcode
   jmp ROM_SOFT_RESET
@@ -68,21 +84,28 @@ MINI_ASSEMBLER:
 @jmp_operand_data:
   jmp @operand_data
 
+@jmp_label_add:
+  jmp @label_add
+
 @jmp_assemble_opcode:
   jmp @assemble_opcode
 
+;------------------------------;
+; Addressing mode is Indirect  ;
+;------------------------------;
+
 @indirect_am:
-  iny
+  iny  ;Increment past open parenthesis
   lda BUFFER, y
   cmp #$24  ;'$'
-  bne @escape
-  iny
-  jsr @parse_hex
+  bne @escape  ;Make sure there is a hex number
+  iny  ;Increment past the dollar sign
+  jsr @parse_hex  ;Get the hex values store them to operand
   lda HEX_L
   sta OPERAND
   lda HEX_H
   sta OPERAND+1
-  bne @absolute_indirect
+  bne @absolute_indirect  ;If just a byte was parse then addressing mode is zeropage
   lda #AM_ZEROPAGE_INDIRECT
   sta ADDRESS_MODE
   jmp @check_indexed_indirect
@@ -93,11 +116,11 @@ MINI_ASSEMBLER:
 
 @check_indexed_indirect:
   lda BUFFER, y
-  cmp #$2C  ;','
+  cmp #$2C  ;',' can only be x indexed if , is before the close parenthesis
   bne @not_x_indexed
   lda ADDRESS_MODE
   cmp #AM_ABSOLUTE_INDIRECT
-  bne @zeropage_indirect
+  bne @zeropage_indirect  ;Check if it's zeropage or absolute 
   lda #AM_ABSOLUTE_INDEXED_INDIRECT
   sta ADDRESS_MODE
   jmp @finish_indexed_indirect
@@ -107,16 +130,16 @@ MINI_ASSEMBLER:
   sta ADDRESS_MODE
 
 @finish_indexed_indirect:
-  iny
+  iny  ;skip ','
   jsr @skip_spaces
   iny  ;skip 'x'
   iny  ;skip ')'
-  jmp @parse_operand
+  jmp @parse_operand  ;Done with indexed indirect addressing mode parse_operand will jmp to assemble_opcode
 
 @not_x_indexed:
   iny  ;skip ')'
   lda BUFFER, y
-  cmp #$2C  ;','
+  cmp #$2C  ;',' can only be y indexed if comma is after close parenthesis
   bne @not_y_indexed
   lda #AM_ZEROPAGE_INDIRECT_INDEXED
   sta ADDRESS_MODE
@@ -127,9 +150,12 @@ MINI_ASSEMBLER:
 @not_y_indexed:
   jmp @parse_operand
 
-;Pound sign was encountered
+;------------------------------;
+; Addressing mode is immediate ;
+;------------------------------;
+
 @immediate_am:
-  iny
+  iny  ;Increment past '#'
   lda #AM_IMMEDIATE
   sta ADDRESS_MODE
   lda BUFFER, y
@@ -157,14 +183,18 @@ MINI_ASSEMBLER:
   stz OPERAND+1
   jmp @parse_operand
 
+;-----------------------------------;
+; Addressing mode absolute/zeropage ; 
+;-----------------------------------;
+
 @operand_data:
-  iny
+  iny  ;Increment past '$'
   jsr @parse_hex
   lda HEX_L
   sta OPERAND
   lda HEX_H
   sta OPERAND+1
-  bne @set_absolute
+  bne @set_absolute  ;If HEX_H is 0 then it's zeropage addressing
   lda #AM_ZEROPAGE
   sta ADDRESS_MODE
   stz OPERAND+1
@@ -178,7 +208,7 @@ MINI_ASSEMBLER:
   lda BUFFER, y
   cmp #$2C  ;','
   bne @not_indexed
-  iny
+  iny  ;Increment past comma
   jsr @skip_spaces
   lda BUFFER, y
   jsr @capitalize
@@ -216,19 +246,26 @@ MINI_ASSEMBLER:
   sta ADDRESS_MODE
 
 @finish_indexed:
-  iny
+  iny  ;Increment past X/Y
 @not_indexed:
   jmp @parse_operand
 
+;------------------------------;
+; Find the Opcode and write it ;
+;------------------------------;
+
+
 @assemble_opcode:
-  jsr @fetch_opcode
+  jsr @fetch_opcode  ;Use the Mnemonic to find the opcode
 
   lda OPCODE
-  cmp #OP_UNK
-  bne @write_opcode
+  cmp #OP_UNK  ;Make sure it was able to find a valid opcode
+  beq @wrong_opcode_addressing_mode
   lda ADDRESS_MODE
   cmp #AM_UNKNOWN
   bne @write_opcode
+
+@wrong_opcode_addressing_mode:
   ldy #$03
   jsr @print_error
   jmp ROM_SOFT_RESET
@@ -238,26 +275,30 @@ MINI_ASSEMBLER:
   sta (STORE_L)
   jsr @inc_store
   
-  lda ADDRESS_MODE
+  lda ADDRESS_MODE  ;Check if addressing mode is between accumulator and stack
   cmp #AM_ACCUMULATOR
   bmi @has_operand
   cmp #AM_STACK+1
   bpl @has_operand
-  jmp MINI_ASSEMBLER
+  jmp MINI_ASSEMBLER  ;Finish for accumulator/implied/stack addressing modes
 
 @has_operand:
   lda OPERAND
   sta (STORE_L)
   jsr @inc_store
 
-  lda OPERAND+1
+  lda OPERAND+1  ;65c02 is little endian
   bne @store_operand_lsb
-  jmp MINI_ASSEMBLER
+  jmp MINI_ASSEMBLER  ;End of assembler
 
 @store_operand_lsb:
   sta (STORE_L)
   jsr @inc_store
   jmp MINI_ASSEMBLER
+
+;------------------------------;
+; Increment store position     ;
+;------------------------------;
 
 @inc_store:
   inc STORE_L
@@ -265,6 +306,10 @@ MINI_ASSEMBLER:
   inc STORE_H
 @no_store_wrap:
   rts
+
+;---------------------------------------------------------;
+; Search for opcode with opcode index and addressing mode ;
+;---------------------------------------------------------;
 
 @fetch_opcode:
   ldx #$00
@@ -310,8 +355,12 @@ MINI_ASSEMBLER:
   sta ADDRESS_MODE
   rts
 
+;----------------------------------------------;
+; Searches for opcode index in mnemonics table ;
+;----------------------------------------------;
+
 @get_opcode_from_table:
-  ldx #$00  ;clear x, x will be the index into the menmonics table
+  ldx #$00  ;clear x, x will be the index into the mnemonics table
   lda #<MNEMONICS  ;Load low-byte of mnemonics table
   sta TEMP_WORD0  ;Save it
   lda #>MNEMONICS  ;Load high-byte of mnemonics table
@@ -356,6 +405,10 @@ MINI_ASSEMBLER:
   lda #OP_UNK
   sta OP_INDEX
   rts
+
+;------------------------------;
+;                              ;
+;------------------------------;
 
 @check_for_accumulator_implied_relative_stack_addressing:
   lda OP_INDEX
@@ -444,6 +497,13 @@ MINI_ASSEMBLER:
 
 @end_check:
   rts
+
+;--------------------------------;
+; Add a label to the label table ;
+;--------------------------------;
+
+@label_add:
+
 
 ;Capitalize ascii character in A register
 ;Registers affected: A
