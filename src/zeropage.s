@@ -1,4 +1,7 @@
 
+;Disassembler Pointers
+FF_COUNTER = $CF
+
 ;RAM Test Pointers
 RAM_TEST     = $D0
 START_INDEX  = $D1

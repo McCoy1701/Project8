@@ -66,7 +66,7 @@ ROM_SOFT_RESET:
   beq @JMP_EXECUTE
   cmp #$6D  ;'m'
   beq @JMP_MINI_ASSEMBLER
-  cmp #$6D  ;'l'
+  cmp #$6C  ;'l'
   beq @JMP_MINI_DISASSEMBLER
   jmp ROM_MONITOR  ;Something bad happened
 

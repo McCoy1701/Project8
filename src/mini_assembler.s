@@ -503,7 +503,7 @@ MINI_ASSEMBLER:
 ;--------------------------------;
 
 @label_add:
-
+  jmp ROM_SOFT_RESET
 
 ;Capitalize ascii character in A register
 ;Registers affected: A

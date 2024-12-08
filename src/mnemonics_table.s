@@ -72,22 +72,22 @@ OP_LDX = $45
 OP_LBL = $46
 OP_UNK = $47
 
-AM_ABSOLUTE                  = $00
-AM_ABSOLUTE_INDEXED_INDIRECT = $01
-AM_ABSOLUTE_INDEXED_X        = $02
-AM_ABSOLUTE_INDEXED_Y        = $03
-AM_ABSOLUTE_INDIRECT         = $04
-AM_IMMEDIATE                 = $05
-AM_ACCUMULATOR               = $06
-AM_IMPLIED                   = $07
-AM_STACK                     = $08
-AM_RELATIVE                  = $09
-AM_ZEROPAGE                  = $0A
-AM_ZEROPAGE_INDEXED_INDIRECT = $0B
-AM_ZEROPAGE_INDEXED_X        = $0C
-AM_ZEROPAGE_INDEXED_Y        = $0D
-AM_ZEROPAGE_INDIRECT         = $0E
-AM_ZEROPAGE_INDIRECT_INDEXED = $0F
+AM_ABSOLUTE                  = $00  ;JMP $5000
+AM_ABSOLUTE_INDEXED_INDIRECT = $01  ;JMP ($2000, X)
+AM_ABSOLUTE_INDEXED_X        = $02  ;STA $3000, X
+AM_ABSOLUTE_INDEXED_Y        = $03  ;AND $4000, Y
+AM_INDIRECT                  = $04  ;JMP ($FFFC)
+AM_IMMEDIATE                 = $05  ;LDA #$10
+AM_ACCUMULATOR               = $06  ;LSR A
+AM_IMPLIED                   = $07  ;TAX
+AM_STACK                     = $08  ;PHA
+AM_RELATIVE                  = $09  ;BRA
+AM_ZEROPAGE                  = $0A  ;LDA $00
+AM_ZEROPAGE_INDEXED_INDIRECT = $0B  ;LDA ($40, X)
+AM_ZEROPAGE_INDEXED_X        = $0C  ;LDA $40, X
+AM_ZEROPAGE_INDEXED_Y        = $0D  ;LDA $40, Y
+AM_ZEROPAGE_INDIRECT         = $0E  ;LDA ($20)
+AM_ZEROPAGE_INDIRECT_INDEXED = $0F  ;LDA ($FC), Y
 AM_UNKNOWN                   = $10
 
 .code
@@ -276,7 +276,7 @@ OPCODES:
   .byte OP_ADC, AM_IMMEDIATE                  ;69
   .byte OP_ROR, AM_ACCUMULATOR                ;6A
   .byte OP_UNK, AM_UNKNOWN                    ;6B
-  .byte OP_JMP, AM_ABSOLUTE_INDIRECT          ;6C
+  .byte OP_JMP, AM_INDIRECT                   ;6C
   .byte OP_ADC, AM_ABSOLUTE                   ;6D
   .byte OP_ROR, AM_ABSOLUTE                   ;6E
   .byte OP_BBR, AM_RELATIVE                   ;6F
