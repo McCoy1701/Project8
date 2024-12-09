@@ -38,12 +38,16 @@ MINI_DISASSEMBLER:
   inc FF_COUNTER
   lda FF_COUNTER
   cmp #$04
-  beq @end_of_disassembly
+  beq @jmp_end_of_disassembly
   jmp @was_FF
+
+@jmp_end_of_disassembly:
+  jmp @end_of_disassembly
 
 @not_FF:
   stz FF_COUNTER  ;Not 4 $FF in a row
 @was_FF:
+  lda (EXAMINE_L)
   jsr @fetch_op_index
   jsr @get_mnemonic
   jsr @get_operand
@@ -66,62 +70,187 @@ MINI_DISASSEMBLER:
   cmp #AM_ABSOLUTE ; TODO: change this to use a range instead of checking every one
   beq @operand_is_word
   cmp #AM_ABSOLUTE_INDEXED_INDIRECT
-  beq @get_word
-  cmp #$02  ;AM_ABSOLUTE_INDEXED_X
-  beq @get_word
-  cmp #$03  ;AM_ABSOLUTE_INDEXED_Y
-  beq @get_word
-  cmp #$04  ;AM_ABSOLUTE_INDIRECT      
-  beq @get_word
+  beq @jmp_indexed_indirect
+  cmp #AM_ABSOLUTE_INDEXED_X
+  beq @jmp_absolute_indexed_x
+  cmp #AM_ABSOLUTE_INDEXED_Y
+  beq @jmp_absolute_indexed_y ;here
+  cmp #AM_INDIRECT
+  beq @jmp_absolute_indirect
   
-  cmp #$05  ;AM_IMMEDIATE
-  beq @get_byte
-  cmp #$06  ;AM_ACCUMULATOR
-  beq @implied
-  cmp #$07  ;AM_IMPLIED
-  beq @implied
-  cmp #$08  ;AM_STACK
-  beq @implied
-  cmp #$09  ;AM_RELATIVE
-  beq @implied
-  
-  cmp #$0A  ;AM_ZEROPAGE
-  beq @get_byte
-  cmp #$0B  ;AM_ZEROPAGE_INDEXED_INDIRECT
-  beq @get_byte
-  cmp #$0C  ;AM_ZEROPAGE_INDEXED_X
-  beq @get_byte
-  cmp #$0D  ;AM_ZEROPAGE_INDEXED_Y
-  beq @get_byte
-  cmp #$0E  ;AM_ZEROPAGE_INDIRECT
-  beq @get_byte
-  cmp #$0F  ;AM_ZEROPAGE_INDIRECT_INDEXED
-  beq @get_byte
+  cmp #AM_IMMEDIATE
+  beq @jmp_immediate
+  cmp #AM_ACCUMULATOR
+  bmi @not_implied
+  cmp #AM_RELATIVE
+  bpl @not_implied
+  jmp @am_implied
 
-  lda OPERAND + 1
-  cmp #$00
-  bne @operand_is_word
-  lda OPERAND
-  cmp #$00
-  bne @operand_is_byte
+@not_implied:
+  cmp #AM_RELATIVE
+  beq @operand_is_byte
+
+  cmp #AM_ZEROPAGE
+  beq @operand_is_byte
+  cmp #AM_ZEROPAGE_INDEXED_INDIRECT
+  beq @jmp_zeropage_indexed_indirect
+  cmp #AM_ZEROPAGE_INDEXED_X
+  beq @jmp_zeropage_indexed_x
+  cmp #AM_ZEROPAGE_INDEXED_Y
+  beq @jmp_zeropage_indexed_y
+  cmp #AM_ZEROPAGE_INDIRECT
+  beq @jmp_zeropage_indirect
+  cmp #AM_ZEROPAGE_INDIRECT_INDEXED
+  beq @jmp_zeropage_indirect_indexed
+  cmp #AM_UNKNOWN
+  beq @jmp_done
+
+@jmp_indexed_indirect:
+  jmp @indexed_indirect
+
+@jmp_absolute_indexed_x:
+  jmp @absolute_indexed_x
+
+@jmp_absolute_indexed_y:
+  jmp @absolute_indexed_y
+
+@jmp_absolute_indirect:
+  jmp @absolute_indirect
+
+@jmp_immediate:
+  jmp @immediate
+
+@jmp_zeropage_indexed_indirect:
+  jmp @zeropage_indexed_indirect
+
+@jmp_zeropage_indexed_x:
+  jmp @zeropage_indexed_x
+
+@jmp_zeropage_indexed_y:
+  jmp @zeropage_indexed_y
+
+@jmp_zeropage_indirect:
+  jmp @zeropage_indirect
+
+@jmp_zeropage_indirect_indexed:
+  jmp @zeropage_indirect_indexed
+
+@jmp_done:
   jmp @done
 
 @operand_is_word:
-  lda #$24  ;'$'
-  jsr CHAR_OUT
-
-  lda OPERAND+1
-  jsr PRINT_BYTE
-  lda OPERAND
-  jsr PRINT_BYTE
+  jsr @print_word_operand
   jmp @done
 
 @operand_is_byte:
-  lda #$24  ;'$'
-  jsr CHAR_OUT
+  jsr @print_byte_operand
+  jmp @done
 
-  lda OPERAND
-  jsr PRINT_BYTE
+@indexed_indirect:
+  lda #$28  ;'('
+  jsr CHAR_OUT
+  jsr @print_word_operand
+  lda #$2C  ;','
+  jsr CHAR_OUT
+  lda #$20  ;' 'space
+  jsr CHAR_OUT
+  lda #$58  ;'X'
+  jsr CHAR_OUT
+  lda #$29  ;')'
+  jsr CHAR_OUT
+  jmp @done
+
+@absolute_indexed_x:
+  jsr @print_word_operand
+  lda #$2C  ;','
+  jsr CHAR_OUT
+  lda #$20  ;' 'space
+  jsr CHAR_OUT
+  lda #$58  ;'X'
+  jsr CHAR_OUT
+  jmp @done
+
+@absolute_indexed_y:
+  jsr @print_word_operand
+  lda #$2C  ;','
+  jsr CHAR_OUT
+  lda #$20  ;' 'space
+  jsr CHAR_OUT
+  lda #$59  ;'Y'
+  jsr CHAR_OUT
+  jmp @done
+
+@absolute_indirect:
+  lda #$28  ;'('
+  jsr CHAR_OUT
+  jsr @print_word_operand
+  lda #$29  ;')'
+  jsr CHAR_OUT
+  jmp @done
+
+@immediate:
+  lda #$23  ;'#'
+  jsr CHAR_OUT
+  jsr @print_byte_operand
+  jmp @done
+
+@am_implied:
+  jmp @done
+
+@zeropage_indexed_indirect:
+  lda #$28  ;'('
+  jsr CHAR_OUT
+  jsr @print_byte_operand
+  lda #$2C  ;','
+  jsr CHAR_OUT
+  lda #$20  ;' 'space
+  jsr CHAR_OUT
+  lda #$58  ;'X'
+  jsr CHAR_OUT
+  lda #$29  ;')'
+  jsr CHAR_OUT
+  jmp @done
+
+@zeropage_indexed_x:
+  jsr @print_byte_operand
+  lda #$2C  ;','
+  jsr CHAR_OUT
+  lda #$20  ;' 'space
+  jsr CHAR_OUT
+  lda #$58  ;'X'
+  jsr CHAR_OUT
+  jmp @done
+
+@zeropage_indexed_y:
+  jsr @print_byte_operand
+  lda #$2C  ;','
+  jsr CHAR_OUT
+  lda #$20  ;' 'space
+  jsr CHAR_OUT
+  lda #$59  ;'Y'
+  jsr CHAR_OUT
+  jmp @done
+
+@zeropage_indirect:
+  lda #$28  ;'('
+  jsr CHAR_OUT
+  jsr @print_byte_operand
+  lda #$29  ;')'
+  jsr CHAR_OUT
+  jmp @done
+
+@zeropage_indirect_indexed:
+  lda #$28  ;'('
+  jsr CHAR_OUT
+  jsr @print_byte_operand
+  lda #$29  ;')'
+  jsr CHAR_OUT
+  lda #$2C  ;','
+  jsr CHAR_OUT
+  lda #$20  ;' 'space
+  jsr CHAR_OUT
+  lda #$59  ;'Y'
+  jsr CHAR_OUT
 
 @done:
   lda #$0D  ;'CR'
@@ -146,39 +275,28 @@ MINI_DISASSEMBLER:
   stz OPERAND+1
   lda ADDRESS_MODE
   cmp #$00  ;AM_ABSOLUTE  TODO: change this to use a range instead of checking every one
-  beq @get_word
-  cmp #$01  ;AM_ABSOLUTE_INDEXED_INDIRECT
-  beq @get_word
-  cmp #$02  ;AM_ABSOLUTE_INDEXED_X
-  beq @get_word
-  cmp #$03  ;AM_ABSOLUTE_INDEXED_Y
-  beq @get_word
-  cmp #$04  ;AM_ABSOLUTE_INDIRECT      
-  beq @get_word
-  
+  bmi @not_word
+  cmp #$04  ;AM_ABSOLUTE_INDIRECT
+  bpl @not_word
+  jmp @get_word
+
+@not_word: 
   cmp #$05  ;AM_IMMEDIATE
   beq @get_byte
   cmp #$06  ;AM_ACCUMULATOR
-  beq @implied
-  cmp #$07  ;AM_IMPLIED
-  beq @implied
-  cmp #$08  ;AM_STACK
-  beq @implied
+  bmi @not_am_implied
   cmp #$09  ;AM_RELATIVE
-  beq @implied
-  
-  cmp #$0A  ;AM_ZEROPAGE
-  beq @get_byte
-  cmp #$0B  ;AM_ZEROPAGE_INDEXED_INDIRECT
-  beq @get_byte
-  cmp #$0C  ;AM_ZEROPAGE_INDEXED_X
-  beq @get_byte
-  cmp #$0D  ;AM_ZEROPAGE_INDEXED_Y
-  beq @get_byte
-  cmp #$0E  ;AM_ZEROPAGE_INDIRECT
-  beq @get_byte
-  cmp #$0F  ;AM_ZEROPAGE_INDIRECT_INDEXED
-  beq @get_byte
+  bpl @not_am_implied
+  jmp @implied
+
+@not_am_implied:
+  cmp #$09  ;AM_RELATIVE
+  bmi @not_get_byte
+  cmp #$10  ;AM_ZEROPAGE_INDIRECT_INDEXED
+  bpl @not_get_byte
+  jmp @get_byte
+
+@not_get_byte:
   jmp @get_operand_done
 
 @get_word:
@@ -321,5 +439,23 @@ MINI_DISASSEMBLER:
   sta OP_INDEX
   lda #AM_UNKNOWN
   sta ADDRESS_MODE
+  rts
+
+@print_word_operand:
+  lda #$24  ;'$'
+  jsr CHAR_OUT
+
+  lda OPERAND+1
+  jsr PRINT_BYTE
+  lda OPERAND
+  jsr PRINT_BYTE
+  rts
+
+@print_byte_operand:
+  lda #$24  ;'$'
+  jsr CHAR_OUT
+
+  lda OPERAND
+  jsr PRINT_BYTE
   rts
 

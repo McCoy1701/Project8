@@ -111,7 +111,7 @@ MINI_ASSEMBLER:
   jmp @check_indexed_indirect
 
 @absolute_indirect:
-  lda #AM_ABSOLUTE_INDIRECT
+  lda #AM_INDIRECT
   sta ADDRESS_MODE
 
 @check_indexed_indirect:
@@ -119,7 +119,7 @@ MINI_ASSEMBLER:
   cmp #$2C  ;',' can only be x indexed if , is before the close parenthesis
   bne @not_x_indexed
   lda ADDRESS_MODE
-  cmp #AM_ABSOLUTE_INDIRECT
+  cmp #AM_INDIRECT
   bne @zeropage_indirect  ;Check if it's zeropage or absolute 
   lda #AM_ABSOLUTE_INDEXED_INDIRECT
   sta ADDRESS_MODE
