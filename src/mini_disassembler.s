@@ -67,7 +67,7 @@ MINI_DISASSEMBLER:
   jsr CHAR_OUT
 
   lda ADDRESS_MODE
-  cmp #AM_ABSOLUTE ; TODO: change this to use a range instead of checking every one
+  cmp #AM_ABSOLUTE
   beq @operand_is_word
   cmp #AM_ABSOLUTE_INDEXED_INDIRECT
   beq @jmp_indexed_indirect
