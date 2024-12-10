@@ -2,7 +2,7 @@
 ; TODO: read byte at store address, if byte is $FF increment ff_counter, else set ff_counter to zero (This keeps track if we hit the end of code),
 ; index into the opcode table that amount, get the mnemonic and addressing mode, output mnemonic if there is one along with operand, skip necessary
 ; bytes if there is operand data this will leave it pointing at the next opcode to disassemble jump back to the next byte to read.
-
+;testing
 .CODE
 
 ;------------------------------;
