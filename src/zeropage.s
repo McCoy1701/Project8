@@ -1,4 +1,9 @@
 
+;Tracemon Pointers
+BREAKPOINT_COUNTER = $CA
+RETURN_ADDRESS     = $CB  ;2bytes
+JUMP_ADDRESS       = $CD  ;2bytes
+
 ;Disassembler Pointers
 FF_COUNTER = $CF
 

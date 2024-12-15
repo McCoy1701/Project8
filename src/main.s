@@ -50,6 +50,7 @@ reset:
 .include "mnemonics_table.s"
 .include "mini_assembler.s"
 .include "mini_disassembler.s"
+.include "tracemon.s"
 
 .include "games/blackjack.s"
 .include "games/pseudo_random_number_generator.s"
