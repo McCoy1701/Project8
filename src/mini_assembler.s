@@ -50,7 +50,7 @@ MINI_ASSEMBLER:
 
 @assemble_mnemonic:
   lda BUFFER, y
-  jsr @capitalize  ;coverts lowercase into uppercase
+  jsr CAPITALIZE  ;coverts lowercase into uppercase
   cmp #'A'  ;Checking if it is actually a uppercase letter
   bmi @escape ;If not just reset to memory monitor
   cmp #'Z'+1
@@ -63,7 +63,7 @@ MINI_ASSEMBLER:
 
   jsr @get_opcode_from_table  ;Sets OP_INDEX from the mnemonic given
   iny
-  jsr @skip_spaces
+  jsr SKIP_SPACES
   jsr @check_for_accumulator_implied_relative_stack_addressing
 
 ;------------------------------------;
@@ -103,7 +103,7 @@ MINI_ASSEMBLER:
   cmp #$24  ;'$'
   bne @escape  ;Make sure there is a hex number
   iny  ;Increment past the dollar sign
-  jsr @parse_hex  ;Get the hex values store them to operand
+  jsr PARSE_HEX  ;Get the hex values store them to operand
   lda HEX_L
   sta OPERAND
   lda HEX_H
@@ -134,7 +134,7 @@ MINI_ASSEMBLER:
 
 @finish_indexed_indirect:
   iny  ;skip ','
-  jsr @skip_spaces
+  jsr SKIP_SPACES
   iny  ;skip 'x'
   iny  ;skip ')'
   jmp @parse_operand  ;Done with indexed indirect addressing mode parse_operand will jmp to assemble_opcode
@@ -147,7 +147,7 @@ MINI_ASSEMBLER:
   lda #AM_ZEROPAGE_INDIRECT_INDEXED
   sta ADDRESS_MODE
   iny ;skip ','
-  jsr @skip_spaces
+  jsr SKIP_SPACES
   iny ;skip 'y' should be at 'CR'
 
 @not_y_indexed:
@@ -166,13 +166,13 @@ MINI_ASSEMBLER:
   beq @hex_operand
   cmp #$25  ;'%'
   beq @binary_operand
-  ldy #$01
-  jsr @print_error
+  ldy #$01  ;No operand
+  jsr PRINT_ERROR
   jmp ROM_SOFT_RESET  ; '#' should always be followed by a '$' or '%'
 
 @hex_operand:
   iny  ;skip '$'
-  jsr @parse_hex  ;Should leave y pointing to the 'CR'
+  jsr PARSE_HEX  ;Should leave y pointing to the 'CR'
   lda HEX_L
   sta OPERAND
   stz OPERAND+1
@@ -180,7 +180,7 @@ MINI_ASSEMBLER:
 
 @binary_operand:
   iny  ;skip '%'
-  jsr @parse_binary  ;Should leave y pointing at 'CR'
+  jsr PARSE_BINARY  ;Should leave y pointing at 'CR'
   lda HEX_L
   sta OPERAND
   stz OPERAND+1
@@ -192,7 +192,7 @@ MINI_ASSEMBLER:
 
 @operand_data:
   iny  ;Increment past '$'
-  jsr @parse_hex
+  jsr PARSE_HEX
   lda HEX_L
   sta OPERAND
   lda HEX_H
@@ -212,15 +212,15 @@ MINI_ASSEMBLER:
   cmp #$2C  ;','
   bne @not_indexed
   iny  ;Increment past comma
-  jsr @skip_spaces
+  jsr SKIP_SPACES
   lda BUFFER, y
-  jsr @capitalize
+  jsr CAPITALIZE
   cmp #$58  ;'X'
   beq @x_indexed
   cmp #$59  ;'Y'
   beq @y_indexed
-  ldy #$02
-  jsr @print_error
+  ldy #$01  ;No Operand
+  jsr PRINT_ERROR
   jmp ROM_SOFT_RESET ;Shouldn't get here
 
 @x_indexed:
@@ -269,8 +269,8 @@ MINI_ASSEMBLER:
   bne @write_opcode
 
 @wrong_opcode_addressing_mode:
-  ldy #$03
-  jsr @print_error
+  ldy #$02  ;unknown opcode
+  jsr PRINT_ERROR
   jmp ROM_SOFT_RESET
 
 @write_opcode:
@@ -449,12 +449,12 @@ MINI_ASSEMBLER:
   cmp #$24  ;'$'
   beq @get_relative_address
   ldy #$01  ;No operand
-  jsr @print_error
+  jsr PRINT_ERROR
   jmp ROM_SOFT_RESET
 
 @get_relative_address:
   iny
-  jsr @parse_hex
+  jsr PARSE_HEX
   
   cld
   sec
@@ -479,8 +479,8 @@ MINI_ASSEMBLER:
   beq @valid_range
   cmp #$00
   beq @valid_range
-  ldy #$04
-  jsr @print_error
+  ldy #$03  ;out of range ( -127, 128 )
+  jsr PRINT_ERROR
   jmp ROM_SOFT_RESET
 
 @valid_range:
@@ -507,120 +507,4 @@ MINI_ASSEMBLER:
 
 @label_add:
   jmp ROM_SOFT_RESET
-
-;Capitalize ascii character in A register
-;Registers affected: A
-
-@capitalize:
-  cmp #'a'
-  bmi @not_lowercase  ;Less than 'a' $61
-  cmp #'z'+1
-  bpl @not_lowercase  ;Greater than 'z' + 1 $7B
-  and #%11011111  ;Clear the 5th bit
-@not_lowercase:
-  rts
-
-;Parses hex value from input buffer until non hex (0-9,A-F) is found
-;Returns the hex values found from input buffer in HEX_L, HEX_H
-;Registers affected: A, Y, X
-
-@parse_hex:
-  lda #$00
-  sta HEX_L
-  sta HEX_H
-  sty BUFFER_INDEX
-
-@get_hex:
-  lda BUFFER, y
-  eor #$30  ;Map ascii digits to 0->9hexit
-  cmp #$0A  ;Digit
-  bcc @digit
-  adc #$A8  ;Map ascii letters a->f to $FA->$FF
-  cmp #$FA
-  bcc @not_hex
-
-@digit:
-  asl
-  asl
-  asl
-  asl
-  ldx #$04
-
-@hex_shift:
-  asl
-  rol HEX_L
-  rol HEX_H
-  dex
-  bne @hex_shift
-  iny
-  jmp @get_hex
-
-@not_hex:
-  cpy BUFFER_INDEX  ;Y = INDEX means found no hex values
-  beq @hard_reset  ;Hard reset before shit breaks
-  rts
-
-@hard_reset:
-  jmp MINI_ASSEMBLER
-
-;Parse buffer for binary digits and stores them into HEX_L
-;Registers affected: A, Y
-
-@parse_binary:
-  lda #$00
-  sta HEX_L
-  sta HEX_H
-  sty BUFFER_INDEX
-
-@get_binary:
-  lda BUFFER, y
-  eor #$30  ;Map ascii digits to 0->1 binary digit
-  cmp #$02  ;Digit
-  bcs @not_binary_digit
-
-  asl  ;move lsb all the way over to msb
-  asl
-  asl
-  asl
-  asl
-  asl
-  asl
-
-  asl  ;move bit 7 into carry
-  rol HEX_L  ;store digit in hex
-  iny
-  jmp @get_binary
-
-@not_binary_digit:
-  cpy BUFFER_INDEX
-  beq @hard_reset
-  rts
-
-;Skips spaces encountered in the input buffer
-;Registers affected: A, Y
-
-@skip_spaces:
-  lda BUFFER, y
-  cmp #$20  ;space
-  beq @do_skip  ;Skip over space
-  rts
-@do_skip:
-  iny
-  jmp @skip_spaces
-
-@print_error:
-  ldx #$00
-@print_error_str:
-  lda @error_str,x
-  beq @done_error_print
-  jsr CHAR_OUT
-  inx
-  jmp @print_error_str
-
-@done_error_print:
-  tya
-  jsr PRINT_BYTE
-  rts
-
-@error_str: .asciiz "syntax error: "
 

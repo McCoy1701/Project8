@@ -27,7 +27,7 @@ MEMORY_TEST:
   cmp TEST_PATTERN
   beq @ram_success
 
-  pha
+  pha  ;Error handling
   lda WRITE_INDEX + 1
   jsr PRINT_BYTE
   lda WRITE_INDEX
