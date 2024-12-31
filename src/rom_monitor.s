@@ -1,5 +1,5 @@
-
-BUFFER = $0200
+.segment "ROM_BUFFER"
+BUFFER: .res $100
 
 .CODE
 

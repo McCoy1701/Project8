@@ -1,3 +1,6 @@
+.segment "LABEL_LIST"
+LABEL_LIST: .res $100
+
 .CODE
 
 ;------------------------------;

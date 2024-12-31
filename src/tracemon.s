@@ -1,3 +1,6 @@
+.segment "BREAKPOINT_LIST"
+BREAKPOINT_LIST: .res $100
+
 .CODE
 
 ;------------------------------;
