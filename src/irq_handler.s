@@ -5,14 +5,14 @@ IRQ_HANDLER:
   sta IRQ_SAVE_A
   pla
   pha
-  and #$10
+  and #$10  ;Check flags for BREAK
   beq @not_break
 
   plp
   pla
   pla
   lda IRQ_SAVE_A
-  jmp ROM_SOFT_RESET
+  jmp ROM_SOFT_RESET  ;Jump to ROM monitor if break
   
 @not_break:
   lda IRQ_SAVE_A
