@@ -3,7 +3,7 @@ LCD_CS = %00000100
 
 .segment "LCD"
 
-spi_send_instruction:
+SPI_LCD_SEND_INSTRUCTION:
   pha
   phx
   phy
@@ -73,7 +73,7 @@ spi_send_instruction:
   pla
   rts
 
-spi_send_data:
+SPI_LCD_SEND_DATA:
   pha
   phx
   phy

@@ -1,19 +1,24 @@
 .segment "UTILS"
 
-delay:
+;Delay x amount of milliseconds from 1 - 255
+;Registers affected: A, X
+
+DELAY:
   pha
+  stx DELAY_TICKS  ;Store delay value (1-255)
+  lda TICKS
+  sta DELTA_TICKS
+
 @delay_loop:
   sec
   lda TICKS
-  sbc TOGGLE_TIME
-  cmp #2
+  sbc DELTA_TICKS
+  cmp DELAY_TICKS
   bcc @delay_loop
-  lda TICKS
-  sta TOGGLE_TIME
   pla
   rts
 
-init_timer:
+TIMER_INITIALIZE:
   lda #0
   sta TICKS
   sta TICKS + 1

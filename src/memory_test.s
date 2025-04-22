@@ -1,4 +1,3 @@
-
 .segment "UTILS"
 
 MEMORY_TEST:

@@ -37,18 +37,18 @@ IRQ_HANDLER:
   and VIA_IER
   asl
   bmi @service_timer_1
-  asl
-  bmi @service_timer_2
-  asl
-  bmi @service_cb_1
-  asl
-  bmi @service_cb_2
-  asl
-  bmi @service_SR
-  asl
-  bmi @service_ca_1
-  asl
-  bmi @service_ca_2
+;  asl
+;  bmi @service_timer_2
+;  asl
+;  bmi @service_cb_1
+;  asl
+;  bmi @service_cb_2
+;  asl
+;  bmi @service_SR
+;  asl
+;  bmi @service_ca_1
+;  asl
+;  bmi @service_ca_2
   jmp @end_irq ;shouldn't get to here, but just in case
 
 @service_timer_1:

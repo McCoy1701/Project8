@@ -36,67 +36,77 @@ SET_GRAPHIC_RAM_ADDR = %10000000
 
 .segment "LCD"
 
-print_char:
+LCD_PRINT_CHAR:
   sta SPI_MOSI
-  jsr spi_send_data
-  jsr delay
+  jsr SPI_LCD_SEND_DATA
+  ldx #$02  ;2ms delay
+  jsr DELAY
   rts
 
-lcd_initialize:
+LCD_INITIALIZE:
   pha
   lda #FUNCTION_SET_4BIT_BASIC    ;Set 8-bit mode, 1-line display, and 5x8 character font
   sta SPI_MOSI
-  jsr spi_send_instruction
-  jsr delay
+  jsr SPI_LCD_SEND_INSTRUCTION
+  ldx #$02  ;2ms delay
+  jsr DELAY
 
   lda #DISPLAY_CTRL_DISPLAY_CURSOR_ON     ;Set display on, cursor on, cursor blinking off
   sta SPI_MOSI
-  jsr spi_send_instruction
-  jsr delay
+  jsr SPI_LCD_SEND_INSTRUCTION
+  ldx #$02  ;2ms delay
+  jsr DELAY
   
   lda #ENTRY_MODE_INC_NO_SHIFT            ;Set entry mode
   sta SPI_MOSI
-  jsr spi_send_instruction
-  jsr delay
+  jsr SPI_LCD_SEND_INSTRUCTION
+  ldx #$02  ;2ms delay
+  jsr DELAY
   
   lda #DISPLAY_CLEAR                      ;Clear display
   sta SPI_MOSI
-  jsr spi_send_instruction
-  jsr delay
+  jsr SPI_LCD_SEND_INSTRUCTION
+  ldx #$02  ;2ms delay
+  jsr DELAY
   pla
   rts
 
-lcd_text_mode:
+LCD_TEXT_MODE:
   pha
   lda #FUNCTION_SET_4BIT_BASIC    ;Set 4-bit mode
   sta SPI_MOSI
-  jsr spi_send_instruction
-  jsr delay
+  jsr SPI_LCD_SEND_INSTRUCTION
+  ldx #$02  ;2ms delay
+  jsr DELAY
 
   lda #DISPLAY_CLEAR
   sta SPI_MOSI
-  jsr spi_send_instruction
-  jsr delay
+  jsr SPI_LCD_SEND_INSTRUCTION
+  ldx #$02  ;2ms delay
+  jsr DELAY
   
   lda #RETURN_HOME
   sta SPI_MOSI
-  jsr spi_send_instruction
-  jsr delay
+  jsr SPI_LCD_SEND_INSTRUCTION
+  ldx #$02  ;2ms delay
+  jsr DELAY
   
   pla
   rts
 
-lcd_graphics_mode:
+LCD_GRAPHICS_MODE:
   pha
   lda #FUNCTION_SET_4BIT_EXTENDED
   sta SPI_MOSI
-  jsr spi_send_instruction
-  jsr delay
+  jsr SPI_LCD_SEND_INSTRUCTION
+  ldx #$02  ;2ms delay
+  jsr DELAY
 
   lda #FUNCTION_SET_4BIT_EXTENDED_GRAPHICS
   sta SPI_MOSI
-  jsr spi_send_instruction
-  jsr delay
+  jsr SPI_LCD_SEND_INSTRUCTION
+  ldx #$02  ;2ms delay
+  jsr DELAY
   
   pla
   rts

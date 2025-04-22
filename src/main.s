@@ -26,15 +26,15 @@ reset:
   txs
 
   lda #0
-  sta TOGGLE_TIME         ;Continuous timer at 1000 CLK cycles
-  jsr init_timer
+  sta DELTA_TICKS         ;Continuous timer at 1000 CLK cycles
+  jsr TIMER_INITIALIZE
 
   lda #$ff                ;Set port a to all outputs
   sta VIA_DDRA
   lda #$07                ;Set 3 bits of the MSB of port b to outputs
   sta VIA_DDRB
 
-  jsr lcd_initialize
+  jsr LCD_INITIALIZE
   jsr ACIA_INITIALIZE
 
   lda RAM_TEST
