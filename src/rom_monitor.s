@@ -104,7 +104,22 @@ ROM_SOFT_RESET:
   jmp MINI_DISASSEMBLER
 
 @JMP_TRACEMON:
+  jsr SKIP_SPACES
+  jsr PARSE_HEX
+  lda HEX_L
+  sta (PROGRAM_ADDRESS)
+  lda HEX_H
+  sta (PROGRAM_ADDRESS+1)
+  
+  lda BUFFER, y
+  cmp #$0D  ;'CR'
+  beq @trace_error
   jmp TRACEMON
+
+@trace_error:
+  ldy #$01  ;No Operand
+  jsr PRINT_ERROR
+  jmp ROM_SOFT_RESET
 
 ;-------------------------------------------------------------;
 ; Write n amount of data from BUFFER to current STORE address ;

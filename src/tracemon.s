@@ -60,6 +60,10 @@ TRACEMON:
 @set_breakpoint:
   jmp ROM_SOFT_RESET
 
+load_tracemon_buffer:
+
+
 TRACEMON_BUFFER:
   .res $03
+  rts
 

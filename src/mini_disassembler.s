@@ -7,7 +7,6 @@
 ;------------------------------;
 ;         Entry Point          ;
 ;------------------------------;
-
 MINI_DISASSEMBLER:
   stz FF_COUNTER  ;Zero everything out
   stz OP_INDEX
@@ -41,18 +40,29 @@ MINI_DISASSEMBLER:
   jmp @was_FF
 
 @jmp_end_of_disassembly:
-  jmp @end_of_disassembly
+  jmp ROM_SOFT_RESET  ;Exit point
 
 @not_FF:
   stz FF_COUNTER  ;Not 4 $FF in a row
 @was_FF:
   lda (EXAMINE_L)
-  jsr @fetch_op_index
-  jsr @get_mnemonic
-  jsr @get_operand
+  jsr FETCH_OP_INDEX
+  jsr GET_MNEMONIC
+  jsr GET_OPERAND
 
   lda #$20  ;' 'space
   jsr CHAR_OUT
+
+  jsr PRINT_OPCODE
+  
+  jsr increment_examine
+  jmp @disassembler_loop
+
+PRINT_OPCODE:
+  pha
+  phx
+  phy
+  php
 
   ldx #$00
 @menmonic_print:
@@ -138,17 +148,17 @@ MINI_DISASSEMBLER:
   jmp @done
 
 @operand_is_word:
-  jsr @print_word_operand
+  jsr print_word_operand
   jmp @done
 
 @operand_is_byte:
-  jsr @print_byte_operand
+  jsr print_byte_operand
   jmp @done
 
 @indexed_indirect:
   lda #$28  ;'('
   jsr CHAR_OUT
-  jsr @print_word_operand
+  jsr print_word_operand
   lda #$2C  ;','
   jsr CHAR_OUT
   lda #$20  ;' 'space
@@ -160,7 +170,7 @@ MINI_DISASSEMBLER:
   jmp @done
 
 @absolute_indexed_x:
-  jsr @print_word_operand
+  jsr print_word_operand
   lda #$2C  ;','
   jsr CHAR_OUT
   lda #$20  ;' 'space
@@ -170,7 +180,7 @@ MINI_DISASSEMBLER:
   jmp @done
 
 @absolute_indexed_y:
-  jsr @print_word_operand
+  jsr print_word_operand
   lda #$2C  ;','
   jsr CHAR_OUT
   lda #$20  ;' 'space
@@ -182,7 +192,7 @@ MINI_DISASSEMBLER:
 @absolute_indirect:
   lda #$28  ;'('
   jsr CHAR_OUT
-  jsr @print_word_operand
+  jsr print_word_operand
   lda #$29  ;')'
   jsr CHAR_OUT
   jmp @done
@@ -190,7 +200,7 @@ MINI_DISASSEMBLER:
 @immediate:
   lda #$23  ;'#'
   jsr CHAR_OUT
-  jsr @print_byte_operand
+  jsr print_byte_operand
   jmp @done
 
 @am_implied:
@@ -199,7 +209,7 @@ MINI_DISASSEMBLER:
 @zeropage_indexed_indirect:
   lda #$28  ;'('
   jsr CHAR_OUT
-  jsr @print_byte_operand
+  jsr print_byte_operand
   lda #$2C  ;','
   jsr CHAR_OUT
   lda #$20  ;' 'space
@@ -211,7 +221,7 @@ MINI_DISASSEMBLER:
   jmp @done
 
 @zeropage_indexed_x:
-  jsr @print_byte_operand
+  jsr print_byte_operand
   lda #$2C  ;','
   jsr CHAR_OUT
   lda #$20  ;' 'space
@@ -221,7 +231,7 @@ MINI_DISASSEMBLER:
   jmp @done
 
 @zeropage_indexed_y:
-  jsr @print_byte_operand
+  jsr print_byte_operand
   lda #$2C  ;','
   jsr CHAR_OUT
   lda #$20  ;' 'space
@@ -233,7 +243,7 @@ MINI_DISASSEMBLER:
 @zeropage_indirect:
   lda #$28  ;'('
   jsr CHAR_OUT
-  jsr @print_byte_operand
+  jsr print_byte_operand
   lda #$29  ;')'
   jsr CHAR_OUT
   jmp @done
@@ -241,7 +251,7 @@ MINI_DISASSEMBLER:
 @zeropage_indirect_indexed:
   lda #$28  ;'('
   jsr CHAR_OUT
-  jsr @print_byte_operand
+  jsr print_byte_operand
   lda #$29  ;')'
   jsr CHAR_OUT
   lda #$2C  ;','
@@ -255,21 +265,17 @@ MINI_DISASSEMBLER:
   lda #$0D  ;'CR'
   jsr CHAR_OUT
   
-  jsr @increment_examine
-  jmp @disassembler_loop
-
-;------------------------------;
-;          Exit Point          ;
-;------------------------------;
-
-@end_of_disassembly:
-  jmp ROM_SOFT_RESET
+  plp
+  ply
+  plx
+  pla
+  rts
 
 ;------------------------------------------;
 ; Get the operand from disassembled opcode ;
 ;------------------------------------------;
 
-@get_operand:
+GET_OPERAND:
   stz OPERAND
   stz OPERAND+1
   lda ADDRESS_MODE
@@ -299,16 +305,16 @@ MINI_DISASSEMBLER:
   jmp @get_operand_done
 
 @get_word:
-  jsr @increment_examine
+  jsr increment_examine
   lda (EXAMINE_L)
   sta OPERAND
-  jsr @increment_examine
+  jsr increment_examine
   lda (EXAMINE_L)
   sta OPERAND + 1
   jmp @get_operand_done
 
 @get_byte:
-  jsr @increment_examine
+  jsr increment_examine
   lda (EXAMINE_L)
   sta OPERAND
 
@@ -317,22 +323,11 @@ MINI_DISASSEMBLER:
 @get_operand_done:
   rts
 
-;------------------------------;
-;                              ;
-;------------------------------;
-
-@increment_examine:
-  inc EXAMINE_L
-  bne @increment_done
-  inc EXAMINE_H
-@increment_done:
-  rts
-
 ;--------------------------------;
 ; Gets ASCII values for mnemonic ;
 ;--------------------------------;
 
-@get_mnemonic:
+GET_MNEMONIC:
   stz MNEMONIC
   stz MNEMONIC+1
   stz MNEMONIC+2
@@ -394,7 +389,7 @@ MINI_DISASSEMBLER:
 ; Gets the OP_INDEX from opcode ;
 ;-------------------------------;
 
-@fetch_op_index:
+FETCH_OP_INDEX:
   sta OPCODE  ;Put a into opcode
 
   lda #<OPCODES
@@ -440,7 +435,20 @@ MINI_DISASSEMBLER:
   sta ADDRESS_MODE
   rts
 
-@print_word_operand:
+;------------------------------;
+;                              ;
+;------------------------------;
+increment_examine:
+  inc EXAMINE_L
+  bne @increment_done
+  inc EXAMINE_H
+@increment_done:
+  rts
+
+;------------------------------;
+;                              ;
+;------------------------------;
+print_word_operand:
   lda #$24  ;'$'
   jsr CHAR_OUT
 
@@ -450,7 +458,10 @@ MINI_DISASSEMBLER:
   jsr PRINT_BYTE
   rts
 
-@print_byte_operand:
+;------------------------------;
+;                              ;
+;------------------------------;
+print_byte_operand:
   lda #$24  ;'$'
   jsr CHAR_OUT
 
