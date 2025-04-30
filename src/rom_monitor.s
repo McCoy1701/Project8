@@ -48,7 +48,7 @@ ROM_SOFT_RESET:
   lda #$00
   tax
 
-@parse_character_loop:
+parse_character_loop:
   lda BUFFER, y
   cmp #$0D  ;'CR'
   beq ROM_SOFT_RESET  ;Finished with this line
@@ -77,25 +77,25 @@ ROM_SOFT_RESET:
   jmp ROM_MONITOR  ;Something bad happened
 
 @JMP_WRITE:
-  jmp @write
+  jmp write
 
 @JMP_READ:
-  jmp @read
+  jmp read
 
 @JMP_SET_ADDRESS:
-  jmp @set_address
+  jmp set_address
 
 @JMP_PRINT_ADDRESSES:
-  jmp @print_addresses
+  jmp print_addresses
 
 @JMP_BLOCK_EXAMINE:
-  jmp @block_examine
+  jmp block_examine
 
 @JMP_PRINT_REGISTERS:
-  jmp @print_registers
+  jmp print_registers
 
 @JMP_EXECUTE:
-  jmp @execute
+  jmp execute
 
 @JMP_MINI_ASSEMBLER:
   jmp MINI_ASSEMBLER
@@ -107,9 +107,9 @@ ROM_SOFT_RESET:
   jsr SKIP_SPACES
   jsr PARSE_HEX
   lda HEX_L
-  sta (PROGRAM_ADDRESS)
+  sta (EXAMINE_L)
   lda HEX_H
-  sta (PROGRAM_ADDRESS+1)
+  sta (EXAMINE_H)
   
   lda BUFFER, y
   cmp #$0D  ;'CR'
@@ -124,8 +124,7 @@ ROM_SOFT_RESET:
 ;-------------------------------------------------------------;
 ; Write n amount of data from BUFFER to current STORE address ;
 ;-------------------------------------------------------------;
-
-@write:
+write:
   iny
 
 @write_loop:
@@ -146,13 +145,12 @@ ROM_SOFT_RESET:
   jmp @write_loop
 
 @write_done:
-  jmp @parse_character_loop
+  jmp parse_character_loop
 
 ;--------------------------------------------------------;
 ; Examine a block of address from hex value to hex value ;
 ;--------------------------------------------------------;
-
-@block_examine:
+block_examine:
   iny
   jsr SKIP_SPACES
   jsr PARSE_HEX
@@ -167,13 +165,12 @@ ROM_SOFT_RESET:
   sta INDEX_L
   lda HEX_H
   sta INDEX_H
-  jmp @begin_data_output
+  jmp begin_data_output
 
 ;------------------------------------------;
 ; Read n bytes from the address in examine ;
 ;------------------------------------------;
-
-@read:
+read:
   lda #$00  ;clear index
   sta INDEX_L
   sta INDEX_H
@@ -190,7 +187,7 @@ ROM_SOFT_RESET:
   adc HEX_H
   sta INDEX_H
 
-@begin_data_output:
+begin_data_output:
   lda #$00
 
 @print_new_line:
@@ -229,15 +226,14 @@ ROM_SOFT_RESET:
   jmp @print_new_line
 
 @done_reading:
-  jmp @parse_character_loop
+  jmp parse_character_loop
 
 ;----------------------------------------------------;
 ; Set the current, store, examine address            ;
 ; Returns the new addsess in CURRENT, STORE, EXAMINE ;
 ; Registers affected: A, X, Y                        ;
 ;----------------------------------------------------;
-
-@set_address:
+set_address:
   iny
   jsr SKIP_SPACES
   jsr PARSE_HEX
@@ -270,20 +266,19 @@ ROM_SOFT_RESET:
   lda (EXAMINE_L)
   jsr PRINT_BYTE
 
-  jmp @parse_character_loop
+  jmp parse_character_loop
 
 ;-------------------------------------------------;
 ; Print the addresses out EXAMINE, STORE, CURRENT ;
 ;-------------------------------------------------;
-
-@print_addresses:
+print_addresses:
   iny
   lda #$0D
   jsr CHAR_OUT
 
   ldx #$00
 @print_examine_str:
-  lda @examine_str,x
+  lda examine_str,x
   beq @done_examine_print
   jsr CHAR_OUT
   inx
@@ -302,7 +297,7 @@ ROM_SOFT_RESET:
 
   ldx #$00
 @print_index_str:
-  lda @index_str,x
+  lda index_str,x
   beq @done_index_print
   jsr CHAR_OUT
   inx
@@ -321,7 +316,7 @@ ROM_SOFT_RESET:
   
   ldx #$00
 @print_store_str:
-  lda @store_str,x
+  lda store_str,x
   beq @done_store_print
   jsr CHAR_OUT
   inx
@@ -335,14 +330,13 @@ ROM_SOFT_RESET:
   lda STORE_L
   jsr PRINT_BYTE
 
-  jmp @parse_character_loop
+  jmp parse_character_loop
 
 ;-----------------------------;
 ; Print out all the registers ;
 ; Registers affected: A, X, Y ;
 ;-----------------------------;
-
-@print_registers:
+print_registers:
   iny
   lda #$0D
   jsr CHAR_OUT
@@ -390,16 +384,16 @@ ROM_SOFT_RESET:
   pla  ;Flags are last
   jsr PRINT_BYTE
 
-  jmp @parse_character_loop
+  jmp parse_character_loop
 
 ;Start executing code at this location
 
-@execute:
+execute:
   jmp (EXAMINE_L)
 
-@examine_str: .asciiz "Examine:"
-@store_str:   .asciiz "Store:"
-@index_str:   .asciiz "Index:"
+examine_str: .asciiz "Examine:"
+store_str:   .asciiz "Store:"
+index_str:   .asciiz "Index:"
 
 
 ;---------------------------------------------------------------------;
