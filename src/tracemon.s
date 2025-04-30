@@ -111,7 +111,6 @@ execute_buffer:
   sta EXECUTION_ADDRESS+1
   jmp (EXECUTION_ADDRESS)
 
-
 TRACEMON_BUFFER:
   .res $02
 
